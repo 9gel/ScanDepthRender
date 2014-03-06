@@ -25,6 +25,14 @@
 		A6ABFC4818C8FF5000BF0851 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC2218C8FF5000BF0851 /* UIKit.framework */; };
 		A6ABFC5018C8FF5000BF0851 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC4E18C8FF5000BF0851 /* InfoPlist.strings */; };
 		A6ABFC5218C8FF5000BF0851 /* ScanDepthRenderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC5118C8FF5000BF0851 /* ScanDepthRenderTests.m */; };
+		A6ABFC5C18C9015200BF0851 /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC5B18C9015200BF0851 /* Structure.framework */; };
+		A6ABFC5F18C9022000BF0851 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC5D18C9022000BF0851 /* CoreMotion.framework */; };
+		A6ABFC6018C9022100BF0851 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC5E18C9022000BF0851 /* CoreVideo.framework */; };
+		A6ABFC6218C9023100BF0851 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6118C9023100BF0851 /* ExternalAccessory.framework */; };
+		A6ABFC6418C9023E00BF0851 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6318C9023E00BF0851 /* CoreImage.framework */; };
+		A6ABFC6618C9024E00BF0851 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6518C9024E00BF0851 /* CoreMedia.framework */; };
+		A6ABFC6818C9027B00BF0851 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6718C9027B00BF0851 /* ImageIO.framework */; };
+		A6ABFC6C18C902AE00BF0851 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +69,15 @@
 		A6ABFC4D18C8FF5000BF0851 /* ScanDepthRenderTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ScanDepthRenderTests-Info.plist"; sourceTree = "<group>"; };
 		A6ABFC4F18C8FF5000BF0851 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A6ABFC5118C8FF5000BF0851 /* ScanDepthRenderTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ScanDepthRenderTests.m; sourceTree = "<group>"; };
+		A6ABFC5B18C9015200BF0851 /* Structure.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Structure.framework; sourceTree = "<group>"; };
+		A6ABFC5D18C9022000BF0851 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
+		A6ABFC5E18C9022000BF0851 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		A6ABFC6118C9023100BF0851 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		A6ABFC6318C9023E00BF0851 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
+		A6ABFC6518C9024E00BF0851 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		A6ABFC6718C9027B00BF0851 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		A6ABFC6918C9029100BF0851 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,11 +85,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */,
+				A6ABFC6C18C902AE00BF0851 /* Accelerate.framework in Frameworks */,
 				A6ABFC2718C8FF5000BF0851 /* OpenGLES.framework in Frameworks */,
+				A6ABFC6818C9027B00BF0851 /* ImageIO.framework in Frameworks */,
+				A6ABFC6618C9024E00BF0851 /* CoreMedia.framework in Frameworks */,
+				A6ABFC6418C9023E00BF0851 /* CoreImage.framework in Frameworks */,
+				A6ABFC6218C9023100BF0851 /* ExternalAccessory.framework in Frameworks */,
+				A6ABFC5F18C9022000BF0851 /* CoreMotion.framework in Frameworks */,
+				A6ABFC6018C9022100BF0851 /* CoreVideo.framework in Frameworks */,
+				A6ABFC5C18C9015200BF0851 /* Structure.framework in Frameworks */,
 				A6ABFC2118C8FF5000BF0851 /* CoreGraphics.framework in Frameworks */,
 				A6ABFC2318C8FF5000BF0851 /* UIKit.framework in Frameworks */,
 				A6ABFC2518C8FF5000BF0851 /* GLKit.framework in Frameworks */,
-				A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,11 +136,20 @@
 		A6ABFC1D18C8FF5000BF0851 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				A6ABFC1E18C8FF5000BF0851 /* Foundation.framework */,
+				A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */,
+				A6ABFC6918C9029100BF0851 /* AVFoundation.framework */,
 				A6ABFC2018C8FF5000BF0851 /* CoreGraphics.framework */,
-				A6ABFC2218C8FF5000BF0851 /* UIKit.framework */,
+				A6ABFC6318C9023E00BF0851 /* CoreImage.framework */,
+				A6ABFC6518C9024E00BF0851 /* CoreMedia.framework */,
+				A6ABFC5D18C9022000BF0851 /* CoreMotion.framework */,
+				A6ABFC5E18C9022000BF0851 /* CoreVideo.framework */,
+				A6ABFC6118C9023100BF0851 /* ExternalAccessory.framework */,
+				A6ABFC1E18C8FF5000BF0851 /* Foundation.framework */,
 				A6ABFC2418C8FF5000BF0851 /* GLKit.framework */,
+				A6ABFC6718C9027B00BF0851 /* ImageIO.framework */,
 				A6ABFC2618C8FF5000BF0851 /* OpenGLES.framework */,
+				A6ABFC5B18C9015200BF0851 /* Structure.framework */,
+				A6ABFC2218C8FF5000BF0851 /* UIKit.framework */,
 				A6ABFC4518C8FF5000BF0851 /* XCTest.framework */,
 			);
 			name = Frameworks;
@@ -397,6 +431,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/nigel/Code/ScanDepthRender,
+				);
+				GCC_INPUT_FILETYPE = sourcecode.cpp.objcpp;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ScanDepthRender/ScanDepthRender-Prefix.pch";
 				INFOPLIST_FILE = "ScanDepthRender/ScanDepthRender-Info.plist";
@@ -410,6 +449,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/nigel/Code/ScanDepthRender,
+				);
+				GCC_INPUT_FILETYPE = sourcecode.cpp.objcpp;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ScanDepthRender/ScanDepthRender-Prefix.pch";
 				INFOPLIST_FILE = "ScanDepthRender/ScanDepthRender-Info.plist";

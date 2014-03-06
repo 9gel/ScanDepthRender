@@ -8,7 +8,11 @@
 
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
+#import <structure/Structure.h>
 
-@interface SDRViewController : GLKViewController
+@interface SDRViewController : GLKViewController <STSensorControllerDelegate>
+
+@property (weak,nonatomic) IBOutlet UILabel* statusLabel;
+@property (weak,nonatomic) IBOutlet UIImageView* depthImageView;
 
 @end

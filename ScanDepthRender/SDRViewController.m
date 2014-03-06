@@ -7,8 +7,10 @@
 //
 
 #import "SDRViewController.h"
+#import <Structure/StructureSLAM.h>
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
+#define STREAM_CONFIG CONFIG_VGA_REGISTERED_DEPTH
 
 // Uniform index.
 enum
@@ -83,6 +85,10 @@ GLfloat gCubeVertexData[216] =
     
     GLuint _vertexArray;
     GLuint _vertexBuffer;
+    
+    STSensorController *_sensorController;
+    STFloatDepthFrame *_depthFrame;
+    STDepthToRgba *_depthToRgba;
 }
 @property (strong, nonatomic) EAGLContext *context;
 @property (strong, nonatomic) GLKBaseEffect *effect;
@@ -102,6 +108,7 @@ GLfloat gCubeVertexData[216] =
 {
     [super viewDidLoad];
     
+    // GL setup
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 
     if (!self.context) {
@@ -113,6 +120,26 @@ GLfloat gCubeVertexData[216] =
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     
     [self setupGL];
+    
+    // Structure setup
+    _sensorController = [STSensorController sharedController];
+    _sensorController.delegate = self;
+    [_sensorController setFrameSyncConfig:FRAME_SYNC_OFF];
+
+    _depthFrame = [[STFloatDepthFrame alloc] init];
+    
+    
+    // When the app enters the foreground, we can choose to restart the stream
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    static bool fromLaunch = true;
+    if (fromLaunch) {
+        [self connectAndStartStreaming];
+        fromLaunch = false;
+    }
 }
 
 - (void)dealloc
@@ -184,6 +211,65 @@ GLfloat gCubeVertexData[216] =
     }
 }
 
+- (void)appWillEnterForeground
+{
+    
+    bool success = [self connectAndStartStreaming];
+    
+    if(!success)
+    {
+        // Workaround for direct multitasking between two Structure Apps.
+        
+        // HACK ALERT! Try once more after a delay if we failed to reconnect on foregrounding.
+        // 0.75s was not enough, 0.95s was, but this might depend on the other app using the sensor.
+        // We need a better solution to this.
+        [NSTimer scheduledTimerWithTimeInterval:2.0 target:self
+                                       selector:@selector(connectAndStartStreaming) userInfo:nil repeats:NO];
+    }
+    
+}
+
+- (bool)connectAndStartStreaming
+{
+    STSensorControllerInitStatus result = [_sensorController initializeSensorConnection];
+    
+    bool didSucceed = (result == STSensorControllerInitStatusSuccess || result == STSensorControllerInitStatusAlreadyInitialized);
+    
+    self.statusLabel.hidden = NO;
+    
+    if (didSucceed)
+    {
+        STSensorInfo *sensorInfo = [_sensorController getSensorInfo:STREAM_CONFIG];
+        if (!sensorInfo) {
+            self.statusLabel.text = @"Error getting Structure Sensor Info.";
+            return false;
+        }
+
+        _depthToRgba = [[STDepthToRgba alloc] initWithSensorInfo:sensorInfo];
+        
+        // After this call, we will start to receive frames through the delegate methods
+        [_sensorController startStreamingWithConfig:STREAM_CONFIG];
+
+        // Now that we've started streaming, hide the status label
+        self.statusLabel.hidden = YES;
+    }
+    else
+    {
+        if (result == STSensorControllerInitStatusSensorNotFound)
+            self.statusLabel.text = @"Please connect Structure Sensor.";
+        else if (result == STSensorControllerInitStatusOpenFailed)
+            self.statusLabel.text = @"Structure Sensor open failed.";
+        else if (result == STSensorControllerInitStatusSensorIsWakingUp)
+            self.statusLabel.text = @"Structure Sensor is waking from low power.";
+        else if (result != STSensorControllerInitStatusSuccess)
+            self.statusLabel.text = [NSString stringWithFormat:@"Structure Sensor failed to init with status %d.", (int)result];
+        else
+            self.statusLabel.text = @"Unknown Structure Sensor state.";
+    }
+    
+    return didSucceed;
+}
+
 #pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update
@@ -236,7 +322,7 @@ GLfloat gCubeVertexData[216] =
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-#pragma mark -  OpenGL ES 2 shader compilation
+#pragma mark - OpenGL ES 2 shader compilation
 
 - (BOOL)loadShaders
 {
@@ -386,6 +472,94 @@ GLfloat gCubeVertexData[216] =
     }
     
     return YES;
+}
+
+#pragma mark - Structure SDK Delegate Methods
+
+- (void)sensorDidDisconnect
+{
+    self.statusLabel.hidden = NO;
+    self.statusLabel.text = @"Structure Sensor disconnected!";
+}
+
+- (void)sensorDidConnect
+{
+    [self connectAndStartStreaming];
+}
+
+- (void)sensorDidEnterLowPowerMode
+{
+}
+
+- (void)sensorDidLeaveLowPowerMode
+{
+}
+
+- (void)sensorBatteryNeedsCharging
+{
+    self.statusLabel.hidden = NO;
+    self.statusLabel.text = @"Please charge the Structure Sensor";
+}
+
+- (void)sensorDidStopStreaming:(STSensorControllerDidStopStreamingReason)reason
+{
+    self.statusLabel.hidden = NO;
+    self.statusLabel.text = @"Structure Sensor stopped streaming";
+}
+
+- (void)sensorDidOutputDepthFrame:(STDepthFrame*)depthFrame
+{
+    [self renderDepthFrame:depthFrame];
+}
+
+// This synchronized API will only be called when two frames match. Typically, timestamps are within 1ms of each other.
+// Two important things have to happen for this method to be called:
+// Tell the SDK we want framesync: [_ocSensorController setFrameSyncConfig:FRAME_SYNC_DEPTH_AND_RGB];
+// Give the SDK color frames as they come in:     [_ocSensorController frameSyncNewColorImage:sampleBuffer];
+- (void)sensorDidOutputSynchronizedDepthFrame:(STDepthFrame*)depthFrame
+                                 andColorFrame:(CMSampleBufferRef)sampleBuffer
+{
+    [self renderDepthFrame:depthFrame];
+    [self renderColorFrame:sampleBuffer];
+}
+
+#pragma mark - Structure Rendering
+
+- (void)renderDepthFrame:(STDepthFrame*)depthFrame
+{
+    [_depthFrame updateFromDepthFrame:depthFrame];
+    uint8_t *rgbaData = [_depthToRgba convertDepthToRgba:_depthFrame];
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    
+    CGBitmapInfo bitmapInfo;
+    bitmapInfo = (CGBitmapInfo)kCGImageAlphaPremultipliedLast;
+    bitmapInfo |= kCGBitmapByteOrder16Big;
+    
+    
+    NSData *data = [NSData dataWithBytes:rgbaData length:depthFrame->width * depthFrame->height * sizeof(uint32_t)];
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
+    
+    CGImageRef cgImage = CGImageCreate(depthFrame->width,
+                                       depthFrame->height,
+                                       8,
+                                       32,
+                                       depthFrame->width * sizeof(uint32_t),
+                                       colorSpace,
+                                       bitmapInfo,
+                                       provider,
+                                       NULL,
+                                       false,
+                                       kCGRenderingIntentDefault);
+    
+    CFRelease(provider);
+    CFRelease(colorSpace);
+    _depthImageView.image = [UIImage imageWithCGImage:cgImage];
+    CGImageRelease(cgImage);
+}
+
+- (void)renderColorFrame:(CMSampleBufferRef)sampleBuffer
+{
 }
 
 @end
