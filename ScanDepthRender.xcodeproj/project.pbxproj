@@ -16,8 +16,8 @@
 		A6ABFC2F18C8FF5000BF0851 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC2E18C8FF5000BF0851 /* main.m */; };
 		A6ABFC3318C8FF5000BF0851 /* SDRAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC3218C8FF5000BF0851 /* SDRAppDelegate.m */; };
 		A6ABFC3618C8FF5000BF0851 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3418C8FF5000BF0851 /* Main.storyboard */; };
-		A6ABFC3818C8FF5000BF0851 /* Shader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3718C8FF5000BF0851 /* Shader.fsh */; };
-		A6ABFC3A18C8FF5000BF0851 /* Shader.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3918C8FF5000BF0851 /* Shader.vsh */; };
+		A6ABFC3818C8FF5000BF0851 /* ExampleShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3718C8FF5000BF0851 /* ExampleShader.fsh */; };
+		A6ABFC3A18C8FF5000BF0851 /* ExampleShader.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3918C8FF5000BF0851 /* ExampleShader.vsh */; };
 		A6ABFC3D18C8FF5000BF0851 /* SDRViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC3C18C8FF5000BF0851 /* SDRViewController.m */; };
 		A6ABFC3F18C8FF5000BF0851 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3E18C8FF5000BF0851 /* Images.xcassets */; };
 		A6ABFC4618C8FF5000BF0851 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC4518C8FF5000BF0851 /* XCTest.framework */; };
@@ -62,8 +62,8 @@
 		A6ABFC3118C8FF5000BF0851 /* SDRAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDRAppDelegate.h; sourceTree = "<group>"; };
 		A6ABFC3218C8FF5000BF0851 /* SDRAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SDRAppDelegate.m; sourceTree = "<group>"; };
 		A6ABFC3518C8FF5000BF0851 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		A6ABFC3718C8FF5000BF0851 /* Shader.fsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; name = Shader.fsh; path = Shaders/Shader.fsh; sourceTree = "<group>"; };
-		A6ABFC3918C8FF5000BF0851 /* Shader.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; name = Shader.vsh; path = Shaders/Shader.vsh; sourceTree = "<group>"; };
+		A6ABFC3718C8FF5000BF0851 /* ExampleShader.fsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; name = ExampleShader.fsh; path = Shaders/ExampleShader.fsh; sourceTree = "<group>"; };
+		A6ABFC3918C8FF5000BF0851 /* ExampleShader.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; name = ExampleShader.vsh; path = Shaders/ExampleShader.vsh; sourceTree = "<group>"; };
 		A6ABFC3B18C8FF5000BF0851 /* SDRViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDRViewController.h; sourceTree = "<group>"; };
 		A6ABFC3C18C8FF5000BF0851 /* SDRViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SDRViewController.m; sourceTree = "<group>"; };
 		A6ABFC3E18C8FF5000BF0851 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -169,14 +169,14 @@
 				A6ABFC3118C8FF5000BF0851 /* SDRAppDelegate.h */,
 				A6ABFC3218C8FF5000BF0851 /* SDRAppDelegate.m */,
 				A6ABFC3418C8FF5000BF0851 /* Main.storyboard */,
-				A6ABFC3718C8FF5000BF0851 /* Shader.fsh */,
-				A6ABFC3918C8FF5000BF0851 /* Shader.vsh */,
 				A6ABFC3B18C8FF5000BF0851 /* SDRViewController.h */,
 				A6ABFC3C18C8FF5000BF0851 /* SDRViewController.m */,
 				A6ABFC7118CA470200BF0851 /* SDRPointCloudRenderer.h */,
 				A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */,
 				A6ABFC6E18C9C69500BF0851 /* SDRExampleRenderer.h */,
 				A6ABFC6F18C9C69500BF0851 /* SDRExampleRenderer.m */,
+				A6ABFC3718C8FF5000BF0851 /* ExampleShader.fsh */,
+				A6ABFC3918C8FF5000BF0851 /* ExampleShader.vsh */,
 				A6ABFC3E18C8FF5000BF0851 /* Images.xcassets */,
 				A6ABFC2918C8FF5000BF0851 /* Supporting Files */,
 			);
@@ -289,9 +289,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A6ABFC3A18C8FF5000BF0851 /* Shader.vsh in Resources */,
+				A6ABFC3A18C8FF5000BF0851 /* ExampleShader.vsh in Resources */,
 				A6ABFC3F18C8FF5000BF0851 /* Images.xcassets in Resources */,
-				A6ABFC3818C8FF5000BF0851 /* Shader.fsh in Resources */,
+				A6ABFC3818C8FF5000BF0851 /* ExampleShader.fsh in Resources */,
 				A6ABFC2D18C8FF5000BF0851 /* InfoPlist.strings in Resources */,
 				A6ABFC3618C8FF5000BF0851 /* Main.storyboard in Resources */,
 			);
