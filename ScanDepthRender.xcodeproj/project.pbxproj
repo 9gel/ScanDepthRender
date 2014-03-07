@@ -33,6 +33,7 @@
 		A6ABFC6618C9024E00BF0851 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6518C9024E00BF0851 /* CoreMedia.framework */; };
 		A6ABFC6818C9027B00BF0851 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6718C9027B00BF0851 /* ImageIO.framework */; };
 		A6ABFC6C18C902AE00BF0851 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */; };
+		A6ABFC6D18C93F3F00BF0851 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6918C9029100BF0851 /* AVFoundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6ABFC6D18C93F3F00BF0851 /* AVFoundation.framework in Frameworks */,
 				A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */,
 				A6ABFC6C18C902AE00BF0851 /* Accelerate.framework in Frameworks */,
 				A6ABFC2718C8FF5000BF0851 /* OpenGLES.framework in Frameworks */,

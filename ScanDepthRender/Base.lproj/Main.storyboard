@@ -25,7 +25,16 @@
                                 <color key="shadowColor" cocoaTouchSystemColor="lightTextColor"/>
                                 <size key="shadowOffset" width="-1" height="-1"/>
                             </label>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2ng-ih-QCd">
+                            <imageView opaque="NO" userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="LHK-V6-ndn" userLabel="Camera Image View">
+                                <rect key="frame" x="428" y="20" width="320" height="240"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="240" id="Z7F-mm-VQ6"/>
+                                    <constraint firstAttribute="width" constant="320" id="dsG-YJ-Wwo"/>
+                                </constraints>
+                            </imageView>
+                            <imageView opaque="NO" userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2ng-ih-QCd" userLabel="Depth Image View">
                                 <rect key="frame" x="428" y="20" width="320" height="240"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -38,12 +47,15 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="2ng-ih-QCd" secondAttribute="trailing" constant="20" id="ABz-7J-Ax6"/>
+                            <constraint firstItem="LHK-V6-ndn" firstAttribute="top" secondItem="pLY-HZ-yNJ" secondAttribute="bottom" constant="20" id="Czf-SM-r3J"/>
                             <constraint firstItem="83k-y3-pX3" firstAttribute="leading" secondItem="3se-qz-xqx" secondAttribute="leading" constant="41" id="Sqf-Bh-edw"/>
                             <constraint firstItem="tRR-Iq-z3m" firstAttribute="top" secondItem="83k-y3-pX3" secondAttribute="bottom" constant="90" id="VBu-af-nvA"/>
                             <constraint firstItem="2ng-ih-QCd" firstAttribute="top" secondItem="pLY-HZ-yNJ" secondAttribute="bottom" constant="20" id="odd-zQ-h25"/>
+                            <constraint firstAttribute="trailing" secondItem="LHK-V6-ndn" secondAttribute="trailing" constant="20" id="qf6-vY-TRS"/>
                         </constraints>
                     </glkView>
                     <connections>
+                        <outlet property="cameraImageView" destination="LHK-V6-ndn" id="cZN-wf-U7G"/>
                         <outlet property="depthImageView" destination="2ng-ih-QCd" id="pxS-BD-xLQ"/>
                         <outlet property="statusLabel" destination="83k-y3-pX3" id="PxE-GJ-3Vb"/>
                     </connections>

@@ -12,6 +12,14 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 #define STREAM_CONFIG CONFIG_VGA_REGISTERED_DEPTH
 
+//#define SCAN_DO_SYNC 1
+
+#ifdef SCAN_DO_SYNC
+#define FRAME_SYNC_CONFIG FRAME_SYNC_DEPTH_AND_RGB
+#else
+#define FRAME_SYNC_CONFIG FRAME_SYNC_OFF
+#endif
+
 // Uniform index.
 enum
 {
@@ -89,6 +97,8 @@ GLfloat gCubeVertexData[216] =
     STSensorController *_sensorController;
     STFloatDepthFrame *_depthFrame;
     STDepthToRgba *_depthToRgba;
+    
+    AVCaptureSession *_avsession;
 }
 @property (strong, nonatomic) EAGLContext *context;
 @property (strong, nonatomic) GLKBaseEffect *effect;
@@ -124,13 +134,17 @@ GLfloat gCubeVertexData[216] =
     // Structure setup
     _sensorController = [STSensorController sharedController];
     _sensorController.delegate = self;
-    [_sensorController setFrameSyncConfig:FRAME_SYNC_OFF];
+    [_sensorController setFrameSyncConfig:FRAME_SYNC_CONFIG];
 
     _depthFrame = [[STFloatDepthFrame alloc] init];
     
-    
-    // When the app enters the foreground, we can choose to restart the stream
+        // When the app enters the foreground, we can choose to restart the stream
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
+
+    // Color camera
+#if !TARGET_IPHONE_SIMULATOR
+    [self startAVCaptureSession];
+#endif
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -560,6 +574,135 @@ GLfloat gCubeVertexData[216] =
 
 - (void)renderColorFrame:(CMSampleBufferRef)sampleBuffer
 {
+    CVImageBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+    
+    size_t cols = CVPixelBufferGetWidth(pixelBuffer);
+    size_t rows = CVPixelBufferGetHeight(pixelBuffer);
+    
+    
+    unsigned char* ptr = (unsigned char*) CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0);
+    
+    NSData *data = [[NSData alloc] initWithBytes:ptr length:rows*cols*4];
+    
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    
+    
+    
+    CGColorSpaceRef colorSpace;
+    
+    colorSpace = CGColorSpaceCreateDeviceRGB();
+    
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((CFDataRef)data);
+    
+    CGImageRef imageRef = CGImageCreate(cols,                                       //width
+                                        rows,                                       //height
+                                        8,                                          //bits per component
+                                        8 * 4,                                      //bits per pixel
+                                        cols*4,                                     //bytesPerRow
+                                        colorSpace,                                 //colorspace
+                                        kCGImageAlphaNoneSkipFirst|kCGBitmapByteOrder32Little,// bitmap info
+                                        provider,                                   //CGDataProviderRef
+                                        NULL,                                       //decode
+                                        false,                                      //should interpolate
+                                        kCGRenderingIntentDefault                   //intent
+                                        );
+    
+    
+    // Getting UIImage from CGImage
+    _cameraImageView.image = [[UIImage alloc] initWithCGImage:imageRef];
+    CGImageRelease(imageRef);
+    CGDataProviderRelease(provider);
+    CGColorSpaceRelease(colorSpace);
+}
+
+#pragma mark - Camera
+
+- (void)startAVCaptureSession
+{
+    NSString* sessionPreset = AVCaptureSessionPreset640x480;
+    
+    //-- Setup Capture Session.
+    _avsession = [[AVCaptureSession alloc] init];
+    [_avsession beginConfiguration];
+    
+    //-- Set preset session size.
+    [_avsession setSessionPreset:sessionPreset];
+    
+    //-- Creata a video device and input from that Device.  Add the input to the capture session.
+    AVCaptureDevice * videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if(videoDevice == nil)
+        assert(0);
+    
+    NSError *error;
+    [videoDevice lockForConfiguration:&error];
+    
+    // Auto-focus Auto-exposure, auto-white balance
+    if ([[[UIDevice currentDevice] systemVersion] compare:@"7.0" options:NSNumericSearch] != NSOrderedAscending)
+        [videoDevice setAutoFocusRangeRestriction:AVCaptureAutoFocusRangeRestrictionFar];
+    [videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+    
+    [videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
+    [videoDevice setWhiteBalanceMode:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance];
+    
+    [videoDevice unlockForConfiguration];
+    
+    //-- Add the device to the session.
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+    if(error)
+        assert(0);
+    
+    [_avsession addInput:input]; // After this point, captureSession captureOptions are filled.
+    
+    //-- Create the output for the capture session.
+    AVCaptureVideoDataOutput * dataOutput = [[AVCaptureVideoDataOutput alloc] init];
+    
+    [dataOutput setAlwaysDiscardsLateVideoFrames:YES];
+    
+    //-- Set to YUV420.
+    [dataOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
+                                                             forKey:(id)kCVPixelBufferPixelFormatTypeKey]];
+    
+    // Set dispatch to be on the main thread so OpenGL can do things with the data
+    [dataOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
+    
+    [_avsession addOutput:dataOutput];
+    
+    if ([[[UIDevice currentDevice] systemVersion] compare:@"7.0" options:NSNumericSearch] != NSOrderedAscending)
+    {
+        [videoDevice lockForConfiguration:&error];
+        [videoDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, 30)];
+        [videoDevice setActiveVideoMinFrameDuration:CMTimeMake(1, 30)];
+        [videoDevice unlockForConfiguration];
+    }
+    else
+    {
+        AVCaptureConnection *conn = [dataOutput connectionWithMediaType:AVMediaTypeVideo];
+        
+        // Deprecated use is OK here because we're using the correct APIs on iOS 7 above when available
+        // If we're running before iOS 7, we still really want 30 fps!
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        conn.videoMinFrameDuration = CMTimeMake(1, 30);
+        conn.videoMaxFrameDuration = CMTimeMake(1, 30);
+#pragma clang diagnostic pop
+        
+    }
+    [_avsession commitConfiguration];
+    
+    [_avsession startRunning];
+}
+
+
+- (void) captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
+{
+#ifdef SCAN_DO_SYNC
+    // Pass into the driver. The sampleBuffer will return later with a synchronized depth pair.
+    [_sensorController frameSyncNewColorImage:sampleBuffer];
+#else
+    [self renderColorFrame:sampleBuffer];
+#endif
 }
 
 @end
