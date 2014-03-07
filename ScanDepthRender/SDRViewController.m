@@ -8,10 +8,12 @@
 
 #import "SDRViewController.h"
 #import "SDRExampleRenderer.h"
+#import "SDRPointCloudRenderer.h"
 #import <Structure/StructureSLAM.h>
-#import "SDRExampleRenderer.h"
 
 #define STREAM_CONFIG CONFIG_VGA_REGISTERED_DEPTH
+
+#define RENDERER_CLASS SDRPointCloudRenderer
 
 //#define SCAN_DO_SYNC 1
 
@@ -22,7 +24,7 @@
 #endif
 
 @interface SDRViewController () {
-    SDRExampleRenderer *_renderer;
+    RENDERER_CLASS *_renderer;
     
     STSensorController *_sensorController;
     STFloatDepthFrame *_depthFrame;
@@ -41,7 +43,7 @@
     [super viewDidLoad];
     
     // GL setup
-    _renderer = [[SDRExampleRenderer alloc] init];
+    _renderer = [[RENDERER_CLASS alloc] init];
     if (!_renderer) {
         NSLog(@"Failed to create renderer.");
         return;

@@ -35,6 +35,7 @@
 		A6ABFC6C18C902AE00BF0851 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */; };
 		A6ABFC6D18C93F3F00BF0851 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6918C9029100BF0851 /* AVFoundation.framework */; };
 		A6ABFC7018C9C69500BF0851 /* SDRExampleRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC6F18C9C69500BF0851 /* SDRExampleRenderer.m */; };
+		A6ABFC7318CA470200BF0851 /* SDRPointCloudRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,8 @@
 		A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		A6ABFC6E18C9C69500BF0851 /* SDRExampleRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDRExampleRenderer.h; sourceTree = "<group>"; };
 		A6ABFC6F18C9C69500BF0851 /* SDRExampleRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDRExampleRenderer.m; sourceTree = "<group>"; };
+		A6ABFC7118CA470200BF0851 /* SDRPointCloudRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDRPointCloudRenderer.h; sourceTree = "<group>"; };
+		A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDRPointCloudRenderer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +173,8 @@
 				A6ABFC3918C8FF5000BF0851 /* Shader.vsh */,
 				A6ABFC3B18C8FF5000BF0851 /* SDRViewController.h */,
 				A6ABFC3C18C8FF5000BF0851 /* SDRViewController.m */,
+				A6ABFC7118CA470200BF0851 /* SDRPointCloudRenderer.h */,
+				A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */,
 				A6ABFC6E18C9C69500BF0851 /* SDRExampleRenderer.h */,
 				A6ABFC6F18C9C69500BF0851 /* SDRExampleRenderer.m */,
 				A6ABFC3E18C8FF5000BF0851 /* Images.xcassets */,
@@ -307,6 +312,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6ABFC7318CA470200BF0851 /* SDRPointCloudRenderer.m in Sources */,
 				A6ABFC3D18C8FF5000BF0851 /* SDRViewController.m in Sources */,
 				A6ABFC3318C8FF5000BF0851 /* SDRAppDelegate.m in Sources */,
 				A6ABFC2F18C8FF5000BF0851 /* main.m in Sources */,
