@@ -7,6 +7,7 @@
 //
 
 #import <GLKit/GLKit.h>
+#import <Structure/StructureSLAM.h>
 
 @interface SDRPointCloudRenderer : NSObject
 
@@ -17,5 +18,6 @@
 - (GLKViewDrawableDepthFormat)drawableDepthFormat;
 - (void)updateWithBounds:(CGRect)bounds timeSinceLastUpdate:(NSTimeInterval)timeSinceLastUpdate;
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect;
+- (void)updatePointCloudData:(STDepthFrame*)depthFrame withColorFrame:(CMSampleBufferRef)sampleBuffer;
 
 @end

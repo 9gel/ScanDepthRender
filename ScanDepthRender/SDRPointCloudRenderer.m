@@ -8,6 +8,7 @@
 
 #import "SDRPointCloudRenderer.h"
 
+#define POINT_CLOUD_DATA_SIZE (640 * 480 * sizeof(GLfloat))
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 // Uniform index.
@@ -74,6 +75,7 @@ GLfloat gTestVertexData[216] =
 };
 
 @interface SDRPointCloudRenderer () {
+    GLfloat _pointCloudData[POINT_CLOUD_DATA_SIZE];
     GLint uniforms[NUM_UNIFORMS];
 
     GLuint _program;
@@ -199,7 +201,7 @@ GLfloat gTestVertexData[216] =
     // Render the object with GLKit
     [self.effect prepareToDraw];
     
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_POINTS, 0, 36);
     
     // Render the object again with ES2
     glUseProgram(_program);
@@ -208,6 +210,11 @@ GLfloat gTestVertexData[216] =
     glUniformMatrix3fv(uniforms[UNIFORM_NORMAL_MATRIX], 1, 0, _normalMatrix.m);
     
     glDrawArrays(GL_POINTS, 0, 36);
+}
+
+- (void)updatePointCloudData:(STDepthFrame*)depthFrame withColorFrame:(CMSampleBufferRef)sampleBuffer
+{
+    
 }
 
 #pragma mark - OpenGL ES 2 shader compilation
@@ -221,14 +228,14 @@ GLfloat gTestVertexData[216] =
     _program = glCreateProgram();
     
     // Create and compile vertex shader.
-    vertShaderPathname = [[NSBundle mainBundle] pathForResource:@"Shader" ofType:@"vsh"];
+    vertShaderPathname = [[NSBundle mainBundle] pathForResource:@"PointCloudShader" ofType:@"vsh"];
     if (![self compileShader:&vertShader type:GL_VERTEX_SHADER file:vertShaderPathname]) {
         NSLog(@"Failed to compile vertex shader");
         return NO;
     }
     
     // Create and compile fragment shader.
-    fragShaderPathname = [[NSBundle mainBundle] pathForResource:@"Shader" ofType:@"fsh"];
+    fragShaderPathname = [[NSBundle mainBundle] pathForResource:@"PointCloudShader" ofType:@"fsh"];
     if (![self compileShader:&fragShader type:GL_FRAGMENT_SHADER file:fragShaderPathname]) {
         NSLog(@"Failed to compile fragment shader");
         return NO;
