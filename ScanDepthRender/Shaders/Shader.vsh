@@ -25,4 +25,5 @@ void main()
     colorVarying = diffuseColor * nDotVP;
     
     gl_Position = modelViewProjectionMatrix * position;
+    gl_PointSize = 400.0 / gl_Position.z;
 }
