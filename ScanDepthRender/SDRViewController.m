@@ -27,10 +27,12 @@
 #define DATA_COLS 640
 #define DATA_ROWS 480
 #define STREAM_CONFIG CONFIG_VGA_REGISTERED_DEPTH
+#define CAMERA_PRESET AVCaptureSessionPreset640x480
 #else
 #define DATA_COLS 320
 #define DATA_ROWS 240
 #define STREAM_CONFIG CONFIG_QVGA_REGISTERED_DEPTH
+#define CAMERA_PRESET AVCaptureSessionPreset352x288
 #endif
 
 @interface SDRViewController () {
@@ -318,7 +320,7 @@
 
 - (void)startAVCaptureSession
 {
-    NSString* sessionPreset = AVCaptureSessionPreset640x480;
+    NSString* sessionPreset = CAMERA_PRESET;
     
     //-- Setup Capture Session.
     _avsession = [[AVCaptureSession alloc] init];
