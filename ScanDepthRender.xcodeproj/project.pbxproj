@@ -50,6 +50,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A68D07DB18CBBF430050B9D7 /* AnimationControl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnimationControl.h; sourceTree = "<group>"; };
 		A6ABFC1B18C8FF5000BF0851 /* ScanDepthRender.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScanDepthRender.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6ABFC1E18C8FF5000BF0851 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		A6ABFC2018C8FF5000BF0851 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -169,6 +170,7 @@
 		A6ABFC2818C8FF5000BF0851 /* ScanDepthRender */ = {
 			isa = PBXGroup;
 			children = (
+				A68D07DB18CBBF430050B9D7 /* AnimationControl.h */,
 				A6ABFC3118C8FF5000BF0851 /* SDRAppDelegate.h */,
 				A6ABFC3218C8FF5000BF0851 /* SDRAppDelegate.m */,
 				A6ABFC3418C8FF5000BF0851 /* Main.storyboard */,
@@ -543,6 +545,7 @@
 				A6ABFC5718C8FF5000BF0851 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A6ABFC5818C8FF5000BF0851 /* Build configuration list for PBXNativeTarget "ScanDepthRenderTests" */ = {
 			isa = XCConfigurationList;
@@ -551,6 +554,7 @@
 				A6ABFC5A18C8FF5000BF0851 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
