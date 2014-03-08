@@ -34,23 +34,11 @@ GLfloat gTestPointData[3*8] =
     -0.5f, -0.5f, -0.5f,
 };
 
-GLubyte gTestColorData[4*8] =
-{
-    0,   0,   0,   255,
-    255, 0,   0,   255,
-    0,   255, 0,   255,
-    0,   0,   255, 255,
-    255, 255, 0,   255,
-    255, 0,   255, 255,
-    0,   255, 255, 255,
-    255, 255, 255, 255,
-};
-
 @interface SDRPointCloudRenderer () {
     size_t _cols;
     size_t _rows;
     NSMutableData *_pointsData;
-    unsigned char *_imageBuffer;
+    NSMutableData *_imageData;
     
     GLint _uniforms[NUM_UNIFORMS];
     GLuint _program;
@@ -81,8 +69,8 @@ GLubyte gTestColorData[4*8] =
 
     _cols = cols;
     _rows = rows;
-    _pointsData = [[NSMutableData alloc] initWithCapacity:cols * rows * sizeof(float)];
-    _imageBuffer = NULL;
+    _pointsData = [[NSMutableData alloc] initWithCapacity:cols * rows * 3 * sizeof(float)];
+    _imageData = [[NSMutableData alloc] initWithCapacity:cols * rows * 4 * sizeof(char)];
 
     [self setupGL];
     return self;
@@ -106,15 +94,15 @@ GLubyte gTestColorData[4*8] =
     
     glGenBuffers(1, &_pointBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(gTestPointData), gTestPointData, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _cols*_rows*3*sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(GLKVertexAttribPosition);
     glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), NULL);
 
     glGenBuffers(1, &_colorBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(gTestColorData), gTestColorData, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _cols*_rows*4*sizeof(GLbyte), NULL, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(GLKVertexAttribColor);
-    glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_FALSE, 4, NULL);
+    glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4, NULL);
 
     glBindVertexArrayOES(0);
 
@@ -141,19 +129,22 @@ GLubyte gTestColorData[4*8] =
 
 - (void)updateWithBounds:(CGRect)bounds timeSinceLastUpdate:(NSTimeInterval)timeSinceLastUpdate
 {
+    // Points update
+    for (int i = 0; i < 24; i++)
+    {
+        ((float*)_pointsData.bytes)[i] = gTestPointData[i] + 0.1 * rand()/(float)RAND_MAX - 0.05;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(gTestPointData), _pointsData.bytes);
+    
+    // Rotation and Projection
     float aspect = fabsf(bounds.size.width / bounds.size.height);
     GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
     
     GLKMatrix4 baseModelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -4.0f);
     baseModelViewMatrix = GLKMatrix4Rotate(baseModelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
     
-    // Compute the model view matrix for the object rendered with GLKit
-    GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -1.5f);
-    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, 1.0f, 1.0f);
-    modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
-    
-    // Compute the model view matrix for the object rendered with ES2
-    modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, 1.5f);
+    GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, 1.5f);
     modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, 1.0f, 1.0f);
     modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
     
@@ -176,14 +167,27 @@ GLubyte gTestColorData[4*8] =
     glDrawArrays(GL_POINTS, 0, 8);
 }
 
-- (void)updateImageDataBuffer:(unsigned char*)buffer
+- (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)imageRef;
 {
-    
-}
-
-- (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame
-{
-    
+    if (imageRef)
+    {
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(_imageData.mutableBytes,
+                                                     _cols, _rows,
+                                                     8,         // bits per component
+                                                     4 * _cols, // bytes per row
+                                                     colorSpace,
+                                                     kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+        CGColorSpaceRelease(colorSpace);
+        
+        CGContextDrawImage(context, CGRectMake(0, 0, _cols, _rows), imageRef);
+        CGContextRelease(context);
+        glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, _cols*_rows*4*sizeof(GLbyte), _imageData.bytes);
+    }
+    if (depthFrame)
+    {
+    }
 }
 
 #pragma mark - OpenGL ES 2 shader compilation

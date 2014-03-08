@@ -223,6 +223,7 @@
 - (void)sensorDidOutputDepthFrame:(STDepthFrame*)depthFrame
 {
     [self renderDepthFrame:depthFrame];
+    [_renderer updatePointsWithDepth:_depthFrame image:nil];
 }
 
 // This synchronized API will only be called when two frames match. Typically, timestamps are within 1ms of each other.
@@ -234,6 +235,7 @@
 {
     [self renderDepthFrame:depthFrame];
     [self renderColorFrame:sampleBuffer];
+    [_renderer updatePointsWithDepth:_depthFrame image:_cameraImageView.image.CGImage];
 }
 
 #pragma mark - Structure Rendering
@@ -401,6 +403,7 @@
     [_sensorController frameSyncNewColorImage:sampleBuffer];
 #else
     [self renderColorFrame:sampleBuffer];
+    [_renderer updatePointsWithDepth:nil image:_cameraImageView.image.CGImage];
 #endif
 }
 

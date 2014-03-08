@@ -19,7 +19,6 @@
 - (GLKViewDrawableDepthFormat)drawableDepthFormat;
 - (void)updateWithBounds:(CGRect)bounds timeSinceLastUpdate:(NSTimeInterval)timeSinceLastUpdate;
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect;
-- (void)updateImageDataBuffer:(unsigned char*)buffer;
-- (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame;
+- (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)image;
 
 @end
