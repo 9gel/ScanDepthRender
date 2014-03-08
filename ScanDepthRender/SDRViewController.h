@@ -10,7 +10,7 @@
 #import <GLKit/GLKit.h>
 #import <structure/Structure.h>
 
-@interface SDRViewController : GLKViewController <STSensorControllerDelegate, AVCaptureVideoDataOutputSampleBufferDelegate>
+@interface SDRViewController : GLKViewController <STSensorControllerDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, UIGestureRecognizerDelegate>
 
 @property (weak,nonatomic) IBOutlet UILabel* statusLabel;
 @property (weak,nonatomic) IBOutlet UIImageView* depthImageView;

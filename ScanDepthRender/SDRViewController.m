@@ -9,6 +9,7 @@
 #import "SDRViewController.h"
 #import "SDRExampleRenderer.h"
 #import "SDRPointCloudRenderer.h"
+#import "AnimationControl.h"
 #import <Structure/StructureSLAM.h>
 
 #define RENDERER_CLASS SDRPointCloudRenderer
@@ -37,6 +38,7 @@
 
 @interface SDRViewController () {
     RENDERER_CLASS *_renderer;
+    AnimationControl *_animation;
     
     STSensorController *_sensorController;
     STFloatDepthFrame *_depthFrame;
@@ -65,6 +67,10 @@
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
     view.drawableDepthFormat = _renderer.drawableDepthFormat;
+    
+    _animation = new AnimationControl(self.view.frame.size.width,
+                                      self.view.frame.size.height);
+    [self setupGestureRecognizer];
     
     // Structure setup
     _sensorController = [STSensorController sharedController];
@@ -173,6 +179,30 @@
     }
     
     return didSucceed;
+}
+
+- (void) setupGestureRecognizer
+{
+    UIPinchGestureRecognizer *pinchScaleGesture = [[UIPinchGestureRecognizer alloc]
+                                                   initWithTarget:self
+                                                   action:@selector(pinchScaleGesture:)];
+    [pinchScaleGesture setDelegate:self];
+    [self.view addGestureRecognizer:pinchScaleGesture];
+    
+    UIPanGestureRecognizer *panRotGesture = [[UIPanGestureRecognizer alloc]
+                                             initWithTarget:self
+                                             action:@selector(panRotGesture:)];
+    [panRotGesture setDelegate:self];
+    [panRotGesture setMaximumNumberOfTouches:1];
+    [self.view addGestureRecognizer:panRotGesture];
+    
+    UIPanGestureRecognizer *panTransGesture = [[UIPanGestureRecognizer alloc]
+                                               initWithTarget:self
+                                               action:@selector(panTransGesture:)];
+    [panTransGesture setDelegate:self];
+    [panTransGesture setMaximumNumberOfTouches:2];
+    [panTransGesture setMinimumNumberOfTouches:2];
+    [self.view addGestureRecognizer:panTransGesture];
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
@@ -405,6 +435,55 @@
     [self renderColorFrame:sampleBuffer];
     [_renderer updatePointsWithDepth:nil image:_cameraImageView.image.CGImage];
 #endif
+}
+
+#pragma mark - UI Control
+
+- (void) pinchScaleGesture: (UIPinchGestureRecognizer*) gestureRecognizer
+{
+    if ([gestureRecognizer state] == UIGestureRecognizerStateBegan)
+        _animation->onTouchScaleBegan([gestureRecognizer scale]);
+    else if ( [gestureRecognizer state] == UIGestureRecognizerStateChanged)
+        _animation->onTouchScaleChanged([gestureRecognizer scale]);
+}
+
+- (void) panRotGesture: (UIPanGestureRecognizer*) gestureRecognizer
+{
+    CGPoint touchPos = [gestureRecognizer locationInView:self.view];
+    CGPoint touchVel = [gestureRecognizer velocityInView:self.view];
+    GLKVector2 touchPosVec = GLKVector2Make(touchPos.x, touchPos.y);
+    GLKVector2 touchVelVec = GLKVector2Make(touchVel.x, touchVel.y);
+    
+    if([gestureRecognizer state] == UIGestureRecognizerStateBegan)
+        _animation->onTouchRotBegan(touchPosVec);
+    else if([gestureRecognizer state] == UIGestureRecognizerStateChanged)
+        _animation->onTouchRotChanged(touchPosVec);
+    else if([gestureRecognizer state] == UIGestureRecognizerStateEnded)
+        _animation->onTouchRotEnded (touchVelVec);
+}
+
+- (void) panTransGesture: (UIPanGestureRecognizer*) gestureRecognizer
+{
+    if ([gestureRecognizer numberOfTouches] != 2)
+        return;
+    
+    CGPoint touchPos = [gestureRecognizer locationInView:self.view];
+    CGPoint touchVel = [gestureRecognizer velocityInView:self.view];
+    GLKVector2 touchPosVec = GLKVector2Make(touchPos.x, touchPos.y);
+    GLKVector2 touchVelVec = GLKVector2Make(touchVel.x, touchVel.y);
+    
+    if([gestureRecognizer state] == UIGestureRecognizerStateBegan)
+        _animation->onTouchTransBegan(touchPosVec);
+    else if([gestureRecognizer state] == UIGestureRecognizerStateChanged)
+        _animation->onTouchTransChanged(touchPosVec);
+    else if([gestureRecognizer state] == UIGestureRecognizerStateEnded)
+        _animation->onTouchTransEnded (touchVelVec);
+}
+
+- (void) touchesBegan: (NSSet*)   touches
+            withEvent: (UIEvent*) event
+{
+    _animation->onTouchStop();
 }
 
 @end
