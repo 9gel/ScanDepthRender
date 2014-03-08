@@ -18,5 +18,5 @@ void main()
     colorVarying = color;
     
     gl_Position = modelViewProjectionMatrix * position;
-    gl_PointSize = 400.0 / gl_Position.z;
+    gl_PointSize = 200.0 / gl_Position.z;
 }

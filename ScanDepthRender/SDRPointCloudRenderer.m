@@ -24,14 +24,14 @@ GLfloat gTestPointData[3*8] =
 {
     // Data layout for each line below is:
     // positionX, positionY, positionZ,
-    0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, -0.5f,
-    0.5f, -0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f,
-    0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, 0.5f,
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
+    5.0f, 5.0f, 5.0f,
+    -5.0f, 5.0f, 5.0f,
+    5.0f, -5.0f, 5.0f,
+    5.0f, 5.0f, -5.0f,
+    5.0f, -5.0f, -5.0f,
+    -5.0f, 5.0f, -5.0f,
+    -5.0f, -5.0f, 5.0f,
+    -5.0f, -5.0f, -5.0f,
 };
 
 @interface SDRPointCloudRenderer () {
@@ -94,7 +94,7 @@ GLfloat gTestPointData[3*8] =
     
     glGenBuffers(1, &_pointBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
-    glBufferData(GL_ARRAY_BUFFER, _cols*_rows*3*sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _cols*_rows*3*sizeof(GLfloat), _pointsData.bytes, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(GLKVertexAttribPosition);
     glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), NULL);
 
@@ -132,7 +132,7 @@ GLfloat gTestPointData[3*8] =
     // Points update
     for (int i = 0; i < 24; i++)
     {
-        ((float*)_pointsData.bytes)[i] = gTestPointData[i] + 0.1 * rand()/(float)RAND_MAX - 0.05;
+        ((float*)_pointsData.mutableBytes)[i] = gTestPointData[i] + 0.1 * rand()/(float)RAND_MAX - 0.05;
     }
     glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(gTestPointData), _pointsData.bytes);
@@ -141,13 +141,10 @@ GLfloat gTestPointData[3*8] =
     float aspect = fabsf(bounds.size.width / bounds.size.height);
     GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
     
-    GLKMatrix4 baseModelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -4.0f);
-    baseModelViewMatrix = GLKMatrix4Rotate(baseModelViewMatrix, _rotation, 0.0f, 1.0f, 0.0f);
-    
-    GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, 1.5f);
-    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, _rotation, 1.0f, 1.0f, 1.0f);
-    modelViewMatrix = GLKMatrix4Multiply(baseModelViewMatrix, modelViewMatrix);
-    
+    GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -20.0f);
+    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, GLKMathDegreesToRadians(40.0f), 1.0, 0.0, 0);
+    float r = _rotation;
+    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, r, 0.0, 1.0, 0);
     _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
     
     _rotation += timeSinceLastUpdate * 0.5f;
@@ -164,7 +161,7 @@ GLfloat gTestPointData[3*8] =
     
     glUniformMatrix4fv(_uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
     
-    glDrawArrays(GL_POINTS, 0, 8);
+    glDrawArrays(GL_POINTS, 0, (GLsizei)(_cols*_rows));
 }
 
 - (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)imageRef;
@@ -182,11 +179,49 @@ GLfloat gTestPointData[3*8] =
         
         CGContextDrawImage(context, CGRectMake(0, 0, _cols, _rows), imageRef);
         CGContextRelease(context);
+        
+        char *p = (char*)_imageData.mutableBytes;
+        p[0] = 255;
+        p[1] = 0;
+        p[2] = 0;
+        p[3] = 255;
+
+        p[4] = 0;
+        p[5] = 255;
+        p[6] = 0;
+        p[7] = 255;
+        
+        p[8] = 0;
+        p[9] = 0;
+        p[10] = 255;
+        p[11] = 255;
+        
         glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
         glBufferSubData(GL_ARRAY_BUFFER, 0, _cols*_rows*4*sizeof(GLbyte), _imageData.bytes);
     }
     if (depthFrame)
     {
+        float *data = (float *)_pointsData.mutableBytes;
+        const float *depths = [depthFrame depthAsMeters];
+        float xcenter = _cols/2.0;
+        float ycenter = _rows/2.0;
+        float pixelAngle = ANGLE_OF_VIEW_VERTICAL/_rows;
+        
+        for (int r = 0; r < _rows; r++)
+        {
+            for (int c = 0; c < _cols; c++)
+            {
+                float depth = depths[r * _cols + c];
+                float * point = data + (r*_cols+c)*3;
+//                point[0] = depth * sinf((r - xcenter)*pixelAngle);
+//                point[1] = depth * sinf((c - ycenter)*pixelAngle);
+                point[0] = 0.016 * (c-xcenter);
+                point[1] = 0.016 * (ycenter-r);
+                point[2] = -depth/1000.0;
+            }
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, _cols*_rows*3*sizeof(GLfloat), _pointsData.bytes);
     }
 }
 
