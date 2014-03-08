@@ -99,7 +99,7 @@
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
     GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(60.0f), aspect, 0.1f, 100.0f);
     _animation->setInitProjectionRt(projectionMatrix);
-    _animation->setMeshCenter(GLKVector3Make(0.0f, 0.0f, -2.0f));
+    _animation->setMeshCenter(GLKVector3Make(0.0f, 0.0f, -0.5f));
 }
 
 - (void)dealloc

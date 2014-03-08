@@ -8,26 +8,26 @@
 
 #import "SDRPointCloudRenderer.h"
 
-// Assume the following intrinsics
+// Assume the following intrinsics and adapted to VGA
 // K_RGB_QVGA       = [305.73, 0, 159.69; 0, 305.62, 119.86; 0, 0, 1]
 // K_RGB_DISTORTION = [0.2073, -0.5398, 0, 0, 0] --> k1 k2 p1 p2 k3
-#define F_X 305.73
-#define F_Y 305.62
-#define C_X 159.69*2
-#define C_Y 119.86*2
+#define F_X (305.73*2)
+#define F_Y (305.62*2)
+#define C_X (159.69*2)
+#define C_Y (119.86*2)
 
 GLfloat gTestPointData[3*8] =
 {
     // Data layout for each line below is:
     // positionX, positionY, positionZ,
-    2.0f, 2.0f, 2.0f,
-    -2.0f, 2.0f, 2.0f,
-    2.0f, -2.0f, 2.0f,
-    2.0f, 2.0f, -2.0f,
-    2.0f, -2.0f, -2.0f,
-    -2.0f, 2.0f, -2.0f,
-    -2.0f, -2.0f, 2.0f,
-    -2.0f, -2.0f, -2.0f,
+    2.0f, 1.0f, 2.0f,
+    -2.0f, 1.0f, 2.0f,
+    2.0f, -1.0f, 2.0f,
+    2.0f, 1.0f, -2.0f,
+    2.0f, -1.0f, -2.0f,
+    -2.0f, 1.0f, -2.0f,
+    -2.0f, -1.0f, 2.0f,
+    -2.0f, -1.0f, -2.0f,
 };
 
 @interface SDRPointCloudRenderer () {
