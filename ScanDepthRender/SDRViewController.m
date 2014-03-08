@@ -14,7 +14,7 @@
 
 #define RENDERER_CLASS SDRPointCloudRenderer
 
-//#define SCAN_DO_SYNC 1
+#define SCAN_DO_SYNC 1
 
 #ifdef SCAN_DO_SYNC
 #define FRAME_SYNC_CONFIG FRAME_SYNC_DEPTH_AND_RGB
@@ -95,6 +95,11 @@
         [self connectAndStartStreaming];
         fromLaunch = false;
     }
+    
+    float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
+    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(60.0f), aspect, 0.1f, 100.0f);
+    _animation->setInitProjectionRt(projectionMatrix);
+    _animation->setMeshCenter(GLKVector3Make(0.0f, 0.0f, -2.0f));
 }
 
 - (void)dealloc
@@ -209,7 +214,11 @@
 
 - (void)update
 {
-    [_renderer updateWithBounds:self.view.bounds timeSinceLastUpdate:self.timeSinceLastUpdate];
+    [_renderer updateWithBounds:self.view.bounds
+                     projection:_animation->currentProjRt()
+                      modelView:_animation->currentModelView()
+                       invScale:1.0f / _animation->currentScale()];
+//    [_renderer updateWithBounds:self.view.bounds timeSinceLastUpdate:self.timeSinceLastUpdate];
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect

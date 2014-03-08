@@ -8,30 +8,26 @@
 
 #import "SDRPointCloudRenderer.h"
 
-#define POINT_CLOUD_DATA_SIZE (640 * 480 * sizeof(GLfloat))
-
-// Angle of view 2 * arctan(7.5/9.5/2) in degrees
-#define ANGLE_OF_VIEW_VERTICAL 43.082
-
-// Uniform index.
-enum
-{
-    UNIFORM_MODELVIEWPROJECTION_MATRIX,
-    NUM_UNIFORMS
-};
+// Assume the following intrinsics
+// K_RGB_QVGA       = [305.73, 0, 159.69; 0, 305.62, 119.86; 0, 0, 1]
+// K_RGB_DISTORTION = [0.2073, -0.5398, 0, 0, 0] --> k1 k2 p1 p2 k3
+#define F_X 305.73
+#define F_Y 305.62
+#define C_X 159.69*2
+#define C_Y 119.86*2
 
 GLfloat gTestPointData[3*8] =
 {
     // Data layout for each line below is:
     // positionX, positionY, positionZ,
-    5.0f, 5.0f, 5.0f,
-    -5.0f, 5.0f, 5.0f,
-    5.0f, -5.0f, 5.0f,
-    5.0f, 5.0f, -5.0f,
-    5.0f, -5.0f, -5.0f,
-    -5.0f, 5.0f, -5.0f,
-    -5.0f, -5.0f, 5.0f,
-    -5.0f, -5.0f, -5.0f,
+    2.0f, 2.0f, 2.0f,
+    -2.0f, 2.0f, 2.0f,
+    2.0f, -2.0f, 2.0f,
+    2.0f, 2.0f, -2.0f,
+    2.0f, -2.0f, -2.0f,
+    -2.0f, 2.0f, -2.0f,
+    -2.0f, -2.0f, 2.0f,
+    -2.0f, -2.0f, -2.0f,
 };
 
 @interface SDRPointCloudRenderer () {
@@ -40,10 +36,14 @@ GLfloat gTestPointData[3*8] =
     NSMutableData *_pointsData;
     NSMutableData *_imageData;
     
-    GLint _uniforms[NUM_UNIFORMS];
     GLuint _program;
-    GLKMatrix4 _modelViewProjectionMatrix;
-    float _rotation;
+
+    GLint _modelViewUniform;
+    GLint _projectionUniform;
+    GLint _inverseScaleUniform;
+    GLKMatrix4 _modelViewMatrix;
+    GLKMatrix4 _projectionMatrix;
+    GLfloat _inverseScale;
     
     GLuint _pointArray;
     GLuint _pointBuffer;
@@ -127,27 +127,23 @@ GLfloat gTestPointData[3*8] =
     return GLKViewDrawableDepthFormat24;
 }
 
-- (void)updateWithBounds:(CGRect)bounds timeSinceLastUpdate:(NSTimeInterval)timeSinceLastUpdate
+- (void)updateWithBounds:(CGRect)bounds
+              projection:(GLKMatrix4)projection
+               modelView:(GLKMatrix4)modelView
+                invScale:(float)invScale;
 {
-    // Points update
+    // Cube guide
     for (int i = 0; i < 24; i++)
     {
-        ((float*)_pointsData.mutableBytes)[i] = gTestPointData[i] + 0.1 * rand()/(float)RAND_MAX - 0.05;
+        ((float*)_pointsData.mutableBytes)[i] = gTestPointData[i];
     }
     glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(gTestPointData), _pointsData.bytes);
     
-    // Rotation and Projection
-    float aspect = fabsf(bounds.size.width / bounds.size.height);
-    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
-    
-    GLKMatrix4 modelViewMatrix = GLKMatrix4MakeTranslation(0.0f, 0.0f, -20.0f);
-    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, GLKMathDegreesToRadians(40.0f), 1.0, 0.0, 0);
-    float r = _rotation;
-    modelViewMatrix = GLKMatrix4Rotate(modelViewMatrix, r, 0.0, 1.0, 0);
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
-    
-    _rotation += timeSinceLastUpdate * 0.5f;
+    // Projection and Model View
+    _modelViewMatrix = modelView;
+    _projectionMatrix = projection;
+    _inverseScale = invScale;
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
@@ -159,7 +155,9 @@ GLfloat gTestPointData[3*8] =
     
     glUseProgram(_program);
     
-    glUniformMatrix4fv(_uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
+    glUniformMatrix4fv(_modelViewUniform, 1, GL_FALSE, _modelViewMatrix.m);
+    glUniformMatrix4fv(_projectionUniform, 1, GL_FALSE, _projectionMatrix.m);
+    glUniform1f(_inverseScaleUniform, _inverseScale);
     
     glDrawArrays(GL_POINTS, 0, (GLsizei)(_cols*_rows));
 }
@@ -180,6 +178,7 @@ GLfloat gTestPointData[3*8] =
         CGContextDrawImage(context, CGRectMake(0, 0, _cols, _rows), imageRef);
         CGContextRelease(context);
         
+        // cube guide colors
         char *p = (char*)_imageData.mutableBytes;
         p[0] = 255;
         p[1] = 0;
@@ -203,21 +202,16 @@ GLfloat gTestPointData[3*8] =
     {
         float *data = (float *)_pointsData.mutableBytes;
         const float *depths = [depthFrame depthAsMeters];
-        float xcenter = _cols/2.0;
-        float ycenter = _rows/2.0;
-        float pixelAngle = ANGLE_OF_VIEW_VERTICAL/_rows;
         
         for (int r = 0; r < _rows; r++)
         {
             for (int c = 0; c < _cols; c++)
             {
-                float depth = depths[r * _cols + c];
+                float depth = depths[r * _cols + c]/1000.0;
                 float * point = data + (r*_cols+c)*3;
-//                point[0] = depth * sinf((r - xcenter)*pixelAngle);
-//                point[1] = depth * sinf((c - ycenter)*pixelAngle);
-                point[0] = 0.016 * (c-xcenter);
-                point[1] = 0.016 * (ycenter-r);
-                point[2] = -depth/1000.0;
+                point[0] = depth * (c - C_X) / F_X;
+                point[1] = depth * (C_Y - r) / F_Y;
+                point[2] = 2.0f - depth;
             }
         }
         glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
@@ -281,7 +275,9 @@ GLfloat gTestPointData[3*8] =
     }
     
     // Get uniform locations.
-    _uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX] = glGetUniformLocation(_program, "modelViewProjectionMatrix");
+    _modelViewUniform = glGetUniformLocation(_program, "modelViewMatrix");
+    _projectionUniform = glGetUniformLocation(_program, "projectionMatrix");
+    _inverseScaleUniform = glGetUniformLocation(_program, "inverseScale");
     
     // Release vertex and fragment shaders.
     if (vertShader) {

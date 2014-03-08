@@ -17,7 +17,10 @@
 - (void)setupGL;
 - (void)tearDownGL;
 - (GLKViewDrawableDepthFormat)drawableDepthFormat;
-- (void)updateWithBounds:(CGRect)bounds timeSinceLastUpdate:(NSTimeInterval)timeSinceLastUpdate;
+- (void)updateWithBounds:(CGRect)bounds
+              projection:(GLKMatrix4)projection
+               modelView:(GLKMatrix4)modelView
+                invScale:(float)invScale;
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect;
 - (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)image;
 

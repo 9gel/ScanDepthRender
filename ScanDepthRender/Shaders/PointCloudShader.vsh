@@ -11,12 +11,15 @@ attribute vec4 color;
 
 varying lowp vec4 colorVarying;
 
-uniform mat4 modelViewProjectionMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
+uniform float inverseScale;
 
 void main()
 {
     colorVarying = color;
     
-    gl_Position = modelViewProjectionMatrix * position;
-    gl_PointSize = 200.0 / gl_Position.z;
+    gl_Position = projectionMatrix * modelViewMatrix * position;
+    gl_PointSize = 10.0;
+//    gl_PointSize = 80.0 / gl_Position.z;
 }
