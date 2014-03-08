@@ -11,8 +11,6 @@
 #import "SDRPointCloudRenderer.h"
 #import <Structure/StructureSLAM.h>
 
-#define STREAM_CONFIG CONFIG_VGA_REGISTERED_DEPTH
-
 #define RENDERER_CLASS SDRPointCloudRenderer
 
 //#define SCAN_DO_SYNC 1
@@ -21,6 +19,18 @@
 #define FRAME_SYNC_CONFIG FRAME_SYNC_DEPTH_AND_RGB
 #else
 #define FRAME_SYNC_CONFIG FRAME_SYNC_OFF
+#endif
+
+#define VGA 1
+
+#ifdef VGA
+#define DATA_COLS 640
+#define DATA_ROWS 480
+#define STREAM_CONFIG CONFIG_VGA_REGISTERED_DEPTH
+#else
+#define DATA_COLS 320
+#define DATA_ROWS 240
+#define STREAM_CONFIG CONFIG_QVGA_REGISTERED_DEPTH
 #endif
 
 @interface SDRViewController () {
@@ -43,7 +53,7 @@
     [super viewDidLoad];
     
     // GL setup
-    _renderer = [[RENDERER_CLASS alloc] init];
+    _renderer = [[RENDERER_CLASS alloc] initWithCols:DATA_COLS rows:DATA_ROWS];
     if (!_renderer) {
         NSLog(@"Failed to create renderer.");
         return;

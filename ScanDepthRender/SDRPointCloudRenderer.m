@@ -9,7 +9,9 @@
 #import "SDRPointCloudRenderer.h"
 
 #define POINT_CLOUD_DATA_SIZE (640 * 480 * sizeof(GLfloat))
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
+// Angle of view 2 * arctan(7.5/9.5/2) in degrees
+#define ANGLE_OF_VIEW_VERTICAL 43.082
 
 // Uniform index.
 enum
@@ -18,39 +20,46 @@ enum
     NUM_UNIFORMS
 };
 
-// Attribute index.
-enum
-{
-    ATTRIB_VERTEX,
-    ATTRIB_NORMAL,
-    NUM_ATTRIBUTES
-};
-
-GLfloat gTestVertexData[6*8] =
+GLfloat gTestPointData[3*8] =
 {
     // Data layout for each line below is:
-    // positionX, positionY, positionZ,     colorR, colorG, colorB,
-    0.5f, 0.5f, 0.5f,         0.0f, 0.0f, 1.0f,
-    0.5f, 0.5f, -0.5f,         1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f,          0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f,          1.0f, 1.0f, 0.0f,
-    0.5f, -0.5f, -0.5f,        1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f,        0.0f, 1.0f, 1.0f,
-    -0.5f, 0.5f, -0.5f,        1.0f, 1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,         0.0f, 0.0f, 0.0f,
+    // positionX, positionY, positionZ,
+    0.5f, 0.5f, 0.5f,
+    0.5f, 0.5f, -0.5f,
+    0.5f, -0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, 0.5f,
+    -0.5f, 0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+};
+
+GLubyte gTestColorData[4*8] =
+{
+    0,   0,   0,   255,
+    255, 0,   0,   255,
+    0,   255, 0,   255,
+    0,   0,   255, 255,
+    255, 255, 0,   255,
+    255, 0,   255, 255,
+    0,   255, 255, 255,
+    255, 255, 255, 255,
 };
 
 @interface SDRPointCloudRenderer () {
-    GLfloat _pointCloudData[POINT_CLOUD_DATA_SIZE];
-    GLint uniforms[NUM_UNIFORMS];
-
-    GLuint _program;
+    size_t _cols;
+    size_t _rows;
+    NSMutableData *_pointsData;
+    unsigned char *_imageBuffer;
     
+    GLint _uniforms[NUM_UNIFORMS];
+    GLuint _program;
     GLKMatrix4 _modelViewProjectionMatrix;
     float _rotation;
     
-    GLuint _vertexArray;
-    GLuint _vertexBuffer;
+    GLuint _pointArray;
+    GLuint _pointBuffer;
+    GLuint _colorBuffer;
 }
 
 - (BOOL)loadShaders;
@@ -62,13 +71,19 @@ GLfloat gTestVertexData[6*8] =
 
 @implementation SDRPointCloudRenderer
 
-- (SDRPointCloudRenderer *)init
+- (SDRPointCloudRenderer *)initWithCols:(size_t)cols rows:(size_t)rows
 {
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     if (!self.context) {
         NSLog(@"Failed to create ES context");
         return nil;
     }
+
+    _cols = cols;
+    _rows = rows;
+    _pointsData = [[NSMutableData alloc] initWithCapacity:cols * rows * sizeof(float)];
+    _imageBuffer = NULL;
+
     [self setupGL];
     return self;
 }
@@ -85,28 +100,33 @@ GLfloat gTestVertexData[6*8] =
     [self loadShaders];
     
     glEnable(GL_DEPTH_TEST);
+
+    glGenVertexArraysOES(1, &_pointArray);
+    glBindVertexArrayOES(_pointArray);
     
-    glGenVertexArraysOES(1, &_vertexArray);
-    glBindVertexArrayOES(_vertexArray);
-    
-    glGenBuffers(1, &_vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(gTestVertexData), gTestVertexData, GL_DYNAMIC_DRAW);
-    
+    glGenBuffers(1, &_pointBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(gTestPointData), gTestPointData, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(GLKVertexAttribPosition);
-    glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(0));
+    glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), NULL);
+
+    glGenBuffers(1, &_colorBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(gTestColorData), gTestColorData, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(GLKVertexAttribColor);
-    glVertexAttribPointer(GLKVertexAttribColor, 3, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(12));
-    
+    glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_FALSE, 4, NULL);
+
     glBindVertexArrayOES(0);
+
 }
 
 - (void)tearDownGL
 {
     [EAGLContext setCurrentContext:self.context];
     
-    glDeleteBuffers(1, &_vertexBuffer);
-    glDeleteVertexArraysOES(1, &_vertexArray);
+    glDeleteBuffers(1, &_colorBuffer);
+    glDeleteBuffers(1, &_pointBuffer);
+    glDeleteVertexArraysOES(1, &_pointArray);
     
     if (_program) {
         glDeleteProgram(_program);
@@ -147,11 +167,11 @@ GLfloat gTestVertexData[6*8] =
     glClearColor(0.65f, 0.65f, 0.65f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    glBindVertexArrayOES(_vertexArray);
+    glBindVertexArrayOES(_pointArray);
     
     glUseProgram(_program);
     
-    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
+    glUniformMatrix4fv(_uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
     
     glDrawArrays(GL_POINTS, 0, 8);
 }
@@ -222,7 +242,7 @@ GLfloat gTestVertexData[6*8] =
     }
     
     // Get uniform locations.
-    uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX] = glGetUniformLocation(_program, "modelViewProjectionMatrix");
+    _uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX] = glGetUniformLocation(_program, "modelViewProjectionMatrix");
     
     // Release vertex and fragment shaders.
     if (vertShader) {

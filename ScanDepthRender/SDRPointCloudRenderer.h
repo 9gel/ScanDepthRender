@@ -13,6 +13,7 @@
 
 @property (strong, nonatomic) EAGLContext *context;
 
+- (SDRPointCloudRenderer *)initWithCols:(size_t)cols rows:(size_t)rows;
 - (void)setupGL;
 - (void)tearDownGL;
 - (GLKViewDrawableDepthFormat)drawableDepthFormat;
