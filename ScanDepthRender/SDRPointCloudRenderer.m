@@ -8,13 +8,12 @@
 
 #import "SDRPointCloudRenderer.h"
 
-// Assume the following intrinsics and adapted to VGA
+// Assume the following intrinsics, from the Structure SDK docs
 // K_RGB_QVGA       = [305.73, 0, 159.69; 0, 305.62, 119.86; 0, 0, 1]
-// K_RGB_DISTORTION = [0.2073, -0.5398, 0, 0, 0] --> k1 k2 p1 p2 k3
-#define F_X (305.73*2)
-#define F_Y (305.62*2)
-#define C_X (159.69*2)
-#define C_Y (119.86*2)
+#define QVGA_F_X 305.73
+#define QVGA_F_Y 305.62
+#define QVGA_C_X 159.69
+#define QVGA_C_Y 119.86
 
 GLfloat gTestPointData[3*8] =
 {
@@ -33,6 +32,7 @@ GLfloat gTestPointData[3*8] =
 @interface SDRPointCloudRenderer () {
     size_t _cols;
     size_t _rows;
+    float _fx, _fy, _cx, _cy;
     NSMutableData *_pointsData;
     NSMutableData *_imageData;
     
@@ -69,6 +69,12 @@ GLfloat gTestPointData[3*8] =
 
     _cols = cols;
     _rows = rows;
+    
+    _fx = QVGA_F_X/320*cols;
+    _fy = QVGA_F_X/240*rows;
+    _cx = QVGA_C_X/320*cols;
+    _cy = QVGA_C_Y/240*rows;
+    
     _pointsData = [[NSMutableData alloc] initWithCapacity:cols * rows * 3 * sizeof(float)];
     _imageData = [[NSMutableData alloc] initWithCapacity:cols * rows * 4 * sizeof(char)];
 
@@ -209,8 +215,8 @@ GLfloat gTestPointData[3*8] =
             {
                 float depth = depths[r * _cols + c]/1000.0;
                 float * point = data + (r*_cols+c)*3;
-                point[0] = depth * (c - C_X) / F_X;
-                point[1] = depth * (C_Y - r) / F_Y;
+                point[0] = depth * (c - _cx) / _fx;
+                point[1] = depth * (_cy - r) / _fy;
                 point[2] = 2.0f - depth;
             }
         }
