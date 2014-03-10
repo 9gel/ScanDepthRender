@@ -97,9 +97,9 @@
     }
     
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
-    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(60.0f), aspect, 0.1f, 100.0f);
+    GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(42.87436f), aspect, 0.1f, 100.0f);
     _animation->setInitProjectionRt(projectionMatrix);
-    _animation->setMeshCenter(GLKVector3Make(0.0f, 0.0f, -0.5f));
+    _animation->setMeshCenter(GLKVector3Make(0.0f, 0.0f, -0.6666f));
 }
 
 - (void)dealloc
@@ -218,7 +218,6 @@
                      projection:_animation->currentProjRt()
                       modelView:_animation->currentModelView()
                        invScale:1.0f / _animation->currentScale()];
-//    [_renderer updateWithBounds:self.view.bounds timeSinceLastUpdate:self.timeSinceLastUpdate];
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
