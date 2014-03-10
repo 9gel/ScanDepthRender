@@ -147,7 +147,7 @@ public:
             GLKVector2 distMoved = GLKVector2MultiplyScalar(_rotVelocity, elapsedSec);
             GLKVector2 spinDegree = GLKVector2Negate(GLKVector2DivideScalar(distMoved, 300));
             
-            GLKMatrix4 rotX = GLKMatrix4MakeYRotation(spinDegree.x);
+            GLKMatrix4 rotX = GLKMatrix4MakeYRotation(-spinDegree.x);
             GLKMatrix4 rotY = GLKMatrix4MakeXRotation(-spinDegree.y);
             _rotMatrix = GLKMatrix4Multiply(GLKMatrix4Multiply(rotX, rotY), _rotMatrix);
             

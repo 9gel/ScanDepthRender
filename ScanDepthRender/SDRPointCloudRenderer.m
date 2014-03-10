@@ -10,23 +10,42 @@
 
 // Assume the following intrinsics, from the Structure SDK docs
 // K_RGB_QVGA       = [305.73, 0, 159.69; 0, 305.62, 119.86; 0, 0, 1]
+#define QVGA_COLS 320
+#define QVGA_ROWS 240
 #define QVGA_F_X 305.73
 #define QVGA_F_Y 305.62
 #define QVGA_C_X 159.69
 #define QVGA_C_Y 119.86
 
-GLfloat gTestPointData[3*8] =
+#define NUM_TEST_POINTS 8
+GLfloat gTestPoints[NUM_TEST_POINTS * 3] =
 {
     // Data layout for each line below is:
     // positionX, positionY, positionZ,
     2.0f, 1.0f, 2.0f,
     -2.0f, 1.0f, 2.0f,
-    2.0f, -1.0f, 2.0f,
-    2.0f, 1.0f, -2.0f,
-    2.0f, -1.0f, -2.0f,
-    -2.0f, 1.0f, -2.0f,
     -2.0f, -1.0f, 2.0f,
+    2.0f, -1.0f, 2.0f,
+    
+    2.0f, 1.0f, -2.0f,
+    -2.0f, 1.0f, -2.0f,
     -2.0f, -1.0f, -2.0f,
+    2.0f, -1.0f, -2.0f,
+};
+
+GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
+{
+    // Data layout for each line below is:
+    // R, G, B, A,
+    255, 0, 0, 255,     // red
+    0, 255, 0, 255,     // green
+    0, 0, 255, 255,     // blue
+    255, 255, 0, 255,   // yellow
+
+    255, 0, 255, 255,   // magenta
+    0, 255, 255, 255,   // cyan
+    255, 255, 255, 0,   // white
+    0, 0, 0, 0          // black
 };
 
 @interface SDRPointCloudRenderer () {
@@ -70,10 +89,10 @@ GLfloat gTestPointData[3*8] =
     _cols = cols;
     _rows = rows;
     
-    _fx = QVGA_F_X/320*cols;
-    _fy = QVGA_F_X/240*rows;
-    _cx = QVGA_C_X/320*cols;
-    _cy = QVGA_C_Y/240*rows;
+    _fx = QVGA_F_X/QVGA_COLS*cols;
+    _fy = QVGA_F_X/QVGA_ROWS*rows;
+    _cx = QVGA_C_X/QVGA_COLS*cols;
+    _cy = QVGA_C_Y/QVGA_ROWS*rows;
     
     _pointsData = [[NSMutableData alloc] initWithCapacity:cols * rows * 3 * sizeof(float)];
     _imageData = [[NSMutableData alloc] initWithCapacity:cols * rows * 4 * sizeof(char)];
@@ -100,15 +119,17 @@ GLfloat gTestPointData[3*8] =
     
     glGenBuffers(1, &_pointBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
-    glBufferData(GL_ARRAY_BUFFER, _cols*_rows*3*sizeof(GLfloat), _pointsData.bytes, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _cols * _rows * 3 * sizeof(GLfloat) + sizeof(gTestPoints), NULL, GL_DYNAMIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(gTestPoints), gTestPoints);
     glEnableVertexAttribArray(GLKVertexAttribPosition);
-    glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), NULL);
+    glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), NULL);
 
     glGenBuffers(1, &_colorBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, _cols*_rows*4*sizeof(GLbyte), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _cols * _rows * 4 * sizeof(GLbyte) + sizeof(gTestPointColors), NULL, GL_DYNAMIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(gTestPointColors), gTestPointColors);
     glEnableVertexAttribArray(GLKVertexAttribColor);
-    glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4, NULL);
+    glVertexAttribPointer(GLKVertexAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4 * sizeof(GLubyte), NULL);
 
     glBindVertexArrayOES(0);
 
@@ -138,15 +159,6 @@ GLfloat gTestPointData[3*8] =
                modelView:(GLKMatrix4)modelView
                 invScale:(float)invScale;
 {
-    // Cube guide
-    for (int i = 0; i < 24; i++)
-    {
-        ((float*)_pointsData.mutableBytes)[i] = gTestPointData[i];
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(gTestPointData), _pointsData.bytes);
-    
-    // Projection and Model View
     _modelViewMatrix = modelView;
     _projectionMatrix = projection;
     _inverseScale = invScale;
@@ -165,7 +177,8 @@ GLfloat gTestPointData[3*8] =
     glUniformMatrix4fv(_projectionUniform, 1, GL_FALSE, _projectionMatrix.m);
     glUniform1f(_inverseScaleUniform, _inverseScale);
     
-    glDrawArrays(GL_POINTS, 0, (GLsizei)(_cols*_rows));
+    glDrawArrays(GL_POINTS, 0, NUM_TEST_POINTS);
+    glDrawArrays(GL_POINTS, NUM_TEST_POINTS, (GLsizei)(_cols*_rows));
 }
 
 - (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)imageRef;
@@ -173,7 +186,7 @@ GLfloat gTestPointData[3*8] =
     if (imageRef)
     {
         CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGContextRef context = CGBitmapContextCreate(_imageData.mutableBytes,
+        CGContextRef context = CGBitmapContextCreate((GLubyte *)_imageData.mutableBytes,
                                                      _cols, _rows,
                                                      8,         // bits per component
                                                      4 * _cols, // bytes per row
@@ -184,29 +197,12 @@ GLfloat gTestPointData[3*8] =
         CGContextDrawImage(context, CGRectMake(0, 0, _cols, _rows), imageRef);
         CGContextRelease(context);
         
-        // cube guide colors
-        char *p = (char*)_imageData.mutableBytes;
-        p[0] = 255;
-        p[1] = 0;
-        p[2] = 0;
-        p[3] = 255;
-
-        p[4] = 0;
-        p[5] = 255;
-        p[6] = 0;
-        p[7] = 255;
-        
-        p[8] = 0;
-        p[9] = 0;
-        p[10] = 255;
-        p[11] = 255;
-        
         glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, _cols*_rows*4*sizeof(GLbyte), _imageData.bytes);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(gTestPointColors), _cols*_rows*4*sizeof(GLbyte), _imageData.bytes);
     }
     if (depthFrame)
     {
-        float *data = (float *)_pointsData.mutableBytes;
+        float *data = (GLfloat *)_pointsData.mutableBytes;
         const float *depths = [depthFrame depthAsMeters];
         
         for (int r = 0; r < _rows; r++)
@@ -221,7 +217,7 @@ GLfloat gTestPointData[3*8] =
             }
         }
         glBindBuffer(GL_ARRAY_BUFFER, _pointBuffer);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, _cols*_rows*3*sizeof(GLfloat), _pointsData.bytes);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(gTestPoints), _cols*_rows*3*sizeof(GLfloat), _pointsData.bytes);
     }
 }
 
