@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6F482D9118CE1C4E00C11D9E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3418C8FF5000BF0851 /* Main.storyboard */; };
 		A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC1E18C8FF5000BF0851 /* Foundation.framework */; };
 		A6ABFC2118C8FF5000BF0851 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC2018C8FF5000BF0851 /* CoreGraphics.framework */; };
 		A6ABFC2318C8FF5000BF0851 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC2218C8FF5000BF0851 /* UIKit.framework */; };
@@ -296,6 +297,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F482D9118CE1C4E00C11D9E /* Main.storyboard in Resources */,
 				A6ABFC7A18CA511200BF0851 /* PointCloudShader.vsh in Resources */,
 				A6ABFC7B18CA511200BF0851 /* PointCloudShader.fsh in Resources */,
 				A6ABFC3A18C8FF5000BF0851 /* ExampleShader.vsh in Resources */,
