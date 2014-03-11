@@ -47,7 +47,6 @@
     AVCaptureSession *_avsession;
 }
 @property (strong, nonatomic) EAGLContext *context;
-@property (strong, nonatomic) GLKBaseEffect *effect;
 @end
 
 @implementation SDRViewController
