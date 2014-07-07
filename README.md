@@ -4,7 +4,10 @@ A demo on how to turn the raw depth data and synced color camera data from the S
 
 Video: https://www.youtube.com/watch?v=dkyBaykCjE4
 
+Instructions
+============
 
+Copy Structure.framework into the top level directory. Open the ScanDepthRender.xcodeproj in Xcode and compile.
 
 
 
