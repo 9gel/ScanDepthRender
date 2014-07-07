@@ -1,27 +1,27 @@
 /*
     This file is part of the Structure SDK.
-    Copyright © 2013 Occipital, Inc. All rights reserved.
+    Copyright © 2014 Occipital, Inc. All rights reserved.
     http://structure.io
 */
 
-# pragma once
+#pragma once
 
-# include <stdint.h>
-# include <stdlib.h>
-# import <Foundation/Foundation.h>
-# import <AVFoundation/AVFoundation.h>
+#include <stdint.h>
+#include <stdlib.h>
+#import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
-# define ST_API __attribute__((visibility("default")))
+#define ST_API __attribute__((visibility("default")))
 
 //------------------------------------------------------------------------------
-# pragma mark - Sensor Controller Types
+#pragma mark - Sensor Controller Types
 
 /// Sensor Initialization Status
 typedef NS_ENUM(NSInteger, STSensorControllerInitStatus)
 {
     STSensorControllerInitStatusSuccess             = 0,
     STSensorControllerInitStatusAlreadyInitialized  = 1,
-    STSensorControllerInitStatusSensorNotFound		= 2,
+    STSensorControllerInitStatusSensorNotFound      = 2,
     STSensorControllerInitStatusSensorIsWakingUp    = 3,
     STSensorControllerInitStatusOpenFailed          = 4,
 };
@@ -55,22 +55,22 @@ typedef NS_ENUM(NSInteger, FrameSyncConfig)
     FRAME_SYNC_IR_AND_RGB
 };
 
+
 /// Frame
-typedef struct
-STFrame
+typedef struct STFrame
 {
-    uint16_t* data;
-    double    timestamp;
-    int       width;
-    int       height;
-}
-STFrame;
+    uint16_t    *data;
+    double      timestamp;
+    int         width;
+    int         height;
+} STFrame;
 
 /// Depth Frame
 typedef STFrame STDepthFrame;
 
 /// Infrared Frame
 typedef STFrame STIRFrame;
+
 
 /** Sensor Info
 
@@ -82,43 +82,48 @@ struct STSensorInfo;
 //------------------------------------------------------------------------------
 # pragma mark - Sensor Controller Delegate
 
-/** Sensor Controller Delegate
-
-The interface that your application-specific class must implement in order to receive sensor controller callbacks.
-
-@note Delegate Registration Example
-
-    [ STSensorController sharedController ].delegate = self;
-
-See also:
-
-- STSensorController
-*/
-
-# if !defined(__cplusplus) && !defined (HAS_STDCXX)
-#   error "Structure requires the C++ runtime."
+# if !defined(__cplusplus) && !defined (HAS_LIBCXX)
+#   error "Structure framework requires the C++ runtime.  See Structure SDK Reference."
 # endif
 
-@protocol STSensorControllerDelegate  <NSObject>
+/** Sensor Controller Delegate
+ 
+ The interface that your application-specific class must implement in order to receive sensor controller callbacks.
+ 
+ @warning When creating a new application implementing a sensor controller delegate, the main `Info.plist` needs to contain an additional key "`Supported external accessory protocols`", with the following array of values:
+ 
+ - `io.structure.control`
+ - `io.structure.depth`
+ - `io.structure.infrared`
+ 
+ Without this modification to the plist, the app will not be able to connect to the sensor. All sample apps have this key/value array.
+ 
+ See also <[STSensorController sharedController]> & <[STSensorController delegate]>.
+ 
+ @note Delegate Registration Example
+ 
+ [ STSensorController sharedController ].delegate = self;
+ */
+@protocol STSensorControllerDelegate <NSObject>
 
 /// @name Connection Status
 
 /// Notifies the delegate that the controller established a successful connection to the sensor.
-- (void) sensorDidConnect;
+- (void)sensorDidConnect;
 
 /// Notifies the delegate that the sensor was disconnected from the controller.
-- (void) sensorDidDisconnect;
+- (void)sensorDidDisconnect;
 
 /** Notifies the delegate that the sensor stopped streaming frames to the controller.
 
 @param reason The reason why the stream was stopped. See: STSensorControllerDidStopStreamingReason.
 */
-- (void) sensorDidStopStreaming: (STSensorControllerDidStopStreamingReason) reason;
+- (void)sensorDidStopStreaming:(STSensorControllerDidStopStreamingReason)reason;
 
 /// @name Power Management
-- (void) sensorDidEnterLowPowerMode;
-- (void) sensorDidLeaveLowPowerMode;
-- (void) sensorBatteryNeedsCharging; // Will be called on main thread.
+- (void)sensorDidEnterLowPowerMode;
+- (void)sensorDidLeaveLowPowerMode;
+- (void)sensorBatteryNeedsCharging; // Will be called on main thread.
 
 @optional
 
@@ -128,13 +133,13 @@ See also:
 
 @param depthFrame The new depth frame.
 */
-- (void) sensorDidOutputDepthFrame: (STDepthFrame*) depthFrame;
+- (void)sensorDidOutputDepthFrame:(STDepthFrame *)depthFrame;
 
 /** Notifies the delegate that the sensor made a new IR frame available to the controller.
 
 @param irFrame The new IR frame.
 */
-- (void) sensorDidOutputIRFrame: (STIRFrame*) irFrame;
+- (void)sensorDidOutputIRFrame:(STIRFrame *)irFrame;
 
 /** @name Color-synchronized Frames
 
@@ -152,10 +157,9 @@ See also:
 
 @param depthFrame The new depth frame
 @param sampleBuffer The new color buffer
-
 */
-- (void) sensorDidOutputSynchronizedDepthFrame: (STDepthFrame*)     depthFrame
-                                 andColorFrame: (CMSampleBufferRef) sampleBuffer;
+- (void)sensorDidOutputSynchronizedDepthFrame:(STDepthFrame *)depthFrame
+                                andColorFrame:(CMSampleBufferRef)sampleBuffer;
 
 /** Notifies the delegate that the sensor made a new pair of synchronized IR and color frames available to the controller.
 
@@ -167,8 +171,8 @@ See also:
 @param irFrame The new IR frame
 @param sampleBuffer The new color buffer
 */
-- (void) sensorDidOutputSynchronizedIRFrame: (STIRFrame*)        irFrame
-                              andColorFrame: (CMSampleBufferRef) sampleBuffer;
+- (void)sensorDidOutputSynchronizedIRFrame:(STIRFrame *)irFrame
+                             andColorFrame:(CMSampleBufferRef)sampleBuffer;
 
 @end
 
@@ -195,14 +199,14 @@ The STSensorController singleton.
 
 Use it to register your application-specific STSensorControllerDelegate delegate.
 */
-+ (STSensorController*) sharedController;
++ (STSensorController *)sharedController;
 
 /**
 The STSensorControllerDelegate delegate.
 
 It will receive all notifications from the sensor, as well as raw stream data.
 */
-@property(nonatomic, assign) id<STSensorControllerDelegate> delegate;
+@property(nonatomic, unsafe_unretained) id<STSensorControllerDelegate> delegate;
 
 /**
 Attempt to connect to the Structure Sensor.
@@ -214,21 +218,21 @@ Attempt to connect to the Structure Sensor.
 
 @note Many methods (including startStreamingWithConfig:) will have no effect until this method succeeds at initializing the sensor.
 */
-- (STSensorControllerInitStatus) initializeSensorConnection;
+- (STSensorControllerInitStatus)initializeSensorConnection;
 
 /**
 This will begin streaming data from the sensor and delivering data using the delegate methods
 
 @param config The stream configuration to use. See: StructureStreamConfig.
 */
-- (void) startStreamingWithConfig: (StructureStreamConfig) config;
+- (void)startStreamingWithConfig:(StructureStreamConfig)config;
 
 /**
 Stop streaming data from the sensor.
 
 After this method is called, there may still be several pending frames delivered to the delegate.
 */
-- (void) stopStreaming;
+- (void)stopStreaming;
 
 /** Request that the driver should attempt to synchronize depth or IR frames with color frames from AVFoundation.
 
@@ -244,39 +248,39 @@ You must then repeatedly call frameSyncNewColorImage: from the AVFoundation vide
 @note Frame sync of depth+IR+RGB and 60 FPS depth are not currently supported.
 @note For frame sync to be effective, the AVCaptureDevice must be configured to have a min and max framerate of 30fps.
 */
-- (void) setFrameSyncConfig: (FrameSyncConfig) config;
+- (void)setFrameSyncConfig:(FrameSyncConfig)config;
 
 /** Give the driver a color frame that will be used to synchronize shutters between the iOS camera and the IR camera.
 
 When receiving the CMSampleBufferRef from AVFoundation, you should only call this one method and do no other processing.
 When a synchronized frame is found, one of the optional synchronized STSensorController delegate methods will be called, at which point you can then process/render the sampleBuffer.
 */
-- (void) frameSyncNewColorImage: (CMSampleBufferRef) sampleBuffer;
+- (void)frameSyncNewColorImage:(CMSampleBufferRef)sampleBuffer;
 
 /// @name Sensor Status
 
 /// Checks whether the controlled sensor is connected.
-- (bool) isConnected;
+- (BOOL)isConnected;
 
 /// Checks whether the controlled sensor is in low-power mode.
-- (bool) isLowPower;
+- (BOOL)isLowPower;
 
 /// Returns an integer in 0..100 representing the battery charge.
-- (int) getBatteryChargePercentage;
+- (int)getBatteryChargePercentage;
 
 /// @name Sensor Information
 
 /// Returns the name of the controlled sensor.
-- (NSString*) getName;
+- (NSString *)getName;
 
 /// Returns the serial number of the controlled sensor.
-- (NSString*) getSerialNumber;
+- (NSString *)getSerialNumber;
 
 /// Returns the firmware revision of the controlled sensor.
-- (NSString*) getFirmwareRevision;
+- (NSString *)getFirmwareRevision;
 
 /// Returns the hardware revision of the controlled sensor.
-- (NSString*) getHardwareRevision;
+- (NSString *)getHardwareRevision;
 
 /** Returns the controlled sensor info as a pointer to an opaque type.
 
@@ -286,7 +290,7 @@ See also:
 - [STDepthToRgba initWithSensorInfo:]
 - [STCubePlacementInitializer initWithCameraInfo:volumeSizeInMeters:]
 */
-- (struct STSensorInfo*) getSensorInfo: (StructureStreamConfig) config;
+- (struct STSensorInfo *)getSensorInfo:(StructureStreamConfig)config;
 
 /// @name Advanced Setup
 
@@ -298,7 +302,7 @@ If the streaming mode is changed with startStreamingWithConfig:, this method wil
 
 @note The hole filter is enabled by default.
 */
-- (void) setHoleFilterEnabled: (bool) enabled;
+- (void)setHoleFilterEnabled:(BOOL)enabled;
 
 /** Enable or disable high sensor gain.
 
@@ -306,7 +310,7 @@ If the streaming mode is changed with startStreamingWithConfig:, this method wil
 
 @note High gain is disabled by default.
 */
-- (void) setHighGain: (bool) enabled;
+- (void)setHighGain:(BOOL)enabled;
 
 /**
 Specify a new rigid body transformation between the iOS camera and IR camera.
@@ -344,6 +348,60 @@ Eigen is already column major, so we can just take the address of an Isometry3f,
         [ [STSensorController sharedController] startStreamingWithConfig: CONFIG_QVGA_REGISTERED_DEPTH ];
     }
 */
-- (void) setRegistrationRBT: (float*) newRbt;
+- (void)setRegistrationRBT:(float *)newRbt;
 
 @end
+
+//------------------------------------------------------------------------------
+# pragma mark - STFloatDepthFrame
+
+/**
+Processed depth image with float pixels values in meters.
+
+Raw STDepthFrame objects output by Structure Sensor have 16 bits integers pixels holding internal shift values. STFloatDepthFrame transforms this data into metric float values.
+*/
+ST_API
+@interface STFloatDepthFrame : NSObject
+
+/** Image width */
+@property (readonly, nonatomic) int width;
+
+/** Image height */
+@property (readonly, nonatomic) int height;
+
+/** capture timestamp in seconds */
+@property (readonly, nonatomic) double timestamp;
+
+/** Pointer to the beginning of a contiguous chunk of width*height depth pixel values, in millimeters. */
+@property (readonly, nonatomic) const float *depthAsMillimeters;
+
+/** Recompute metric values from raw Structure depth frame */
+- (void)updateFromDepthFrame:(STDepthFrame *)depthFrame;
+
+@end
+
+//------------------------------------------------------------------------------
+# pragma mark - STWirelessLog
+
+/**
+Wireless logging utility.
+
+This class gives the ability to wirelessly send log messages to a remote console.
+
+It is very useful when the sensor is occupying the lightning port.
+*/
+ST_API
+@interface STWirelessLog : NSObject
+
+/** Redirects the standard and error outputs to a TCP connection.
+
+Messages sent to the stdout and stderr (such as `NSLog`, `std::cout`, `std::cerr`, `printf`) will be sent to the given IPv4 address on the specified port.
+
+In order to receive these messages on a remote machine, you can, for instance, use the *netcat* command-line utility (available by default on Mac OS X). Simply run in a terminal: `nc -lk <port>`
+
+@note If the connection fails, the returned error will be non-`nil` and no output will be transmitted.
+*/
++ (void)broadcastLogsToWirelessConsoleAtAddress:(NSString *)ipv4Address usingPort:(int)port error:(NSError **)error ;
+
+@end
+

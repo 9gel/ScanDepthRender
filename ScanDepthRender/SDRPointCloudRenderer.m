@@ -203,7 +203,7 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
     if (depthFrame)
     {
         float *data = (GLfloat *)_pointsData.mutableBytes;
-        const float *depths = [depthFrame depthAsMeters];
+        const float *depths = [depthFrame depthAsMillimeters];
         
         for (int r = 0; r < _rows; r++)
         {

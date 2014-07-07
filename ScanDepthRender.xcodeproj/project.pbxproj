@@ -25,7 +25,6 @@
 		A6ABFC4818C8FF5000BF0851 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC2218C8FF5000BF0851 /* UIKit.framework */; };
 		A6ABFC5018C8FF5000BF0851 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC4E18C8FF5000BF0851 /* InfoPlist.strings */; };
 		A6ABFC5218C8FF5000BF0851 /* ScanDepthRenderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC5118C8FF5000BF0851 /* ScanDepthRenderTests.m */; };
-		A6ABFC5C18C9015200BF0851 /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC5B18C9015200BF0851 /* Structure.framework */; };
 		A6ABFC5F18C9022000BF0851 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC5D18C9022000BF0851 /* CoreMotion.framework */; };
 		A6ABFC6018C9022100BF0851 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC5E18C9022000BF0851 /* CoreVideo.framework */; };
 		A6ABFC6218C9023100BF0851 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC6118C9023100BF0851 /* ExternalAccessory.framework */; };
@@ -38,6 +37,9 @@
 		A6ABFC7318CA470200BF0851 /* SDRPointCloudRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */; };
 		A6ABFC7A18CA511200BF0851 /* PointCloudShader.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC7418CA4DE600BF0851 /* PointCloudShader.vsh */; };
 		A6ABFC7B18CA511200BF0851 /* PointCloudShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC7518CA4DE600BF0851 /* PointCloudShader.fsh */; };
+		A6D60CD7196B0954008C0A0F /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6D60CD6196B0954008C0A0F /* Structure.framework */; };
+		A6D60CD8196B0954008C0A0F /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6D60CD6196B0954008C0A0F /* Structure.framework */; };
+		A6D60CDA196B0AEE008C0A0F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6D60CD9196B0AEE008C0A0F /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,7 +77,6 @@
 		A6ABFC4D18C8FF5000BF0851 /* ScanDepthRenderTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ScanDepthRenderTests-Info.plist"; sourceTree = "<group>"; };
 		A6ABFC4F18C8FF5000BF0851 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		A6ABFC5118C8FF5000BF0851 /* ScanDepthRenderTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ScanDepthRenderTests.m; sourceTree = "<group>"; };
-		A6ABFC5B18C9015200BF0851 /* Structure.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Structure.framework; sourceTree = "<group>"; };
 		A6ABFC5D18C9022000BF0851 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		A6ABFC5E18C9022000BF0851 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		A6ABFC6118C9023100BF0851 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
@@ -90,6 +91,8 @@
 		A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDRPointCloudRenderer.m; sourceTree = "<group>"; };
 		A6ABFC7418CA4DE600BF0851 /* PointCloudShader.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = PointCloudShader.vsh; path = Shaders/PointCloudShader.vsh; sourceTree = "<group>"; };
 		A6ABFC7518CA4DE600BF0851 /* PointCloudShader.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = PointCloudShader.fsh; path = Shaders/PointCloudShader.fsh; sourceTree = "<group>"; };
+		A6D60CD6196B0954008C0A0F /* Structure.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Structure.framework; sourceTree = "<group>"; };
+		A6D60CD9196B0AEE008C0A0F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,17 +100,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6D60CDA196B0AEE008C0A0F /* QuartzCore.framework in Frameworks */,
 				A6ABFC6D18C93F3F00BF0851 /* AVFoundation.framework in Frameworks */,
 				A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */,
 				A6ABFC6C18C902AE00BF0851 /* Accelerate.framework in Frameworks */,
 				A6ABFC2718C8FF5000BF0851 /* OpenGLES.framework in Frameworks */,
 				A6ABFC6818C9027B00BF0851 /* ImageIO.framework in Frameworks */,
 				A6ABFC6618C9024E00BF0851 /* CoreMedia.framework in Frameworks */,
+				A6D60CD7196B0954008C0A0F /* Structure.framework in Frameworks */,
 				A6ABFC6418C9023E00BF0851 /* CoreImage.framework in Frameworks */,
 				A6ABFC6218C9023100BF0851 /* ExternalAccessory.framework in Frameworks */,
 				A6ABFC5F18C9022000BF0851 /* CoreMotion.framework in Frameworks */,
 				A6ABFC6018C9022100BF0851 /* CoreVideo.framework in Frameworks */,
-				A6ABFC5C18C9015200BF0851 /* Structure.framework in Frameworks */,
 				A6ABFC2118C8FF5000BF0851 /* CoreGraphics.framework in Frameworks */,
 				A6ABFC2318C8FF5000BF0851 /* UIKit.framework in Frameworks */,
 				A6ABFC2518C8FF5000BF0851 /* GLKit.framework in Frameworks */,
@@ -118,6 +122,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6D60CD8196B0954008C0A0F /* Structure.framework in Frameworks */,
 				A6ABFC4618C8FF5000BF0851 /* XCTest.framework in Frameworks */,
 				A6ABFC4818C8FF5000BF0851 /* UIKit.framework in Frameworks */,
 				A6ABFC4718C8FF5000BF0851 /* Foundation.framework in Frameworks */,
@@ -149,6 +154,8 @@
 		A6ABFC1D18C8FF5000BF0851 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A6D60CD9196B0AEE008C0A0F /* QuartzCore.framework */,
+				A6D60CD6196B0954008C0A0F /* Structure.framework */,
 				A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */,
 				A6ABFC6918C9029100BF0851 /* AVFoundation.framework */,
 				A6ABFC2018C8FF5000BF0851 /* CoreGraphics.framework */,
@@ -161,7 +168,6 @@
 				A6ABFC2418C8FF5000BF0851 /* GLKit.framework */,
 				A6ABFC6718C9027B00BF0851 /* ImageIO.framework */,
 				A6ABFC2618C8FF5000BF0851 /* OpenGLES.framework */,
-				A6ABFC5B18C9015200BF0851 /* Structure.framework */,
 				A6ABFC2218C8FF5000BF0851 /* UIKit.framework */,
 				A6ABFC4518C8FF5000BF0851 /* XCTest.framework */,
 			);
@@ -265,7 +271,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = SDR;
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Nigel Choi";
 				TargetAttributes = {
 					A6ABFC4318C8FF5000BF0851 = {
@@ -380,7 +386,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -420,7 +425,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -489,12 +493,12 @@
 		A6ABFC5918C8FF5000BF0851 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/ScanDepthRender.app/ScanDepthRender";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ScanDepthRender/ScanDepthRender-Prefix.pch";
@@ -512,12 +516,12 @@
 		A6ABFC5A18C8FF5000BF0851 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/ScanDepthRender.app/ScanDepthRender";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ScanDepthRender/ScanDepthRender-Prefix.pch";
