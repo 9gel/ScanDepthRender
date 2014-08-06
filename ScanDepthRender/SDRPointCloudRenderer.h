@@ -20,7 +20,8 @@
 - (void)updateWithBounds:(CGRect)bounds
               projection:(GLKMatrix4)projection
                modelView:(GLKMatrix4)modelView
-                invScale:(float)invScale;
+                invScale:(float)invScale
+               pointSize:(float)pointSize;
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect;
 - (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)image;
 

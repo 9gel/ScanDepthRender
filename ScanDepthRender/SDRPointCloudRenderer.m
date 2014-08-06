@@ -60,9 +60,11 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
     GLint _modelViewUniform;
     GLint _projectionUniform;
     GLint _inverseScaleUniform;
+    GLint _pointSizeUniform;
     GLKMatrix4 _modelViewMatrix;
     GLKMatrix4 _projectionMatrix;
     GLfloat _inverseScale;
+    GLfloat _pointSize;
     
     GLuint _pointArray;
     GLuint _pointBuffer;
@@ -157,11 +159,13 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
 - (void)updateWithBounds:(CGRect)bounds
               projection:(GLKMatrix4)projection
                modelView:(GLKMatrix4)modelView
-                invScale:(float)invScale;
+                invScale:(float)invScale
+               pointSize:(float)pointSize;
 {
     _modelViewMatrix = modelView;
     _projectionMatrix = projection;
     _inverseScale = invScale;
+    _pointSize = pointSize;
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
@@ -176,6 +180,7 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
     glUniformMatrix4fv(_modelViewUniform, 1, GL_FALSE, _modelViewMatrix.m);
     glUniformMatrix4fv(_projectionUniform, 1, GL_FALSE, _projectionMatrix.m);
     glUniform1f(_inverseScaleUniform, _inverseScale);
+    glUniform1f(_pointSizeUniform, _pointSize);
     
     glDrawArrays(GL_POINTS, 0, NUM_TEST_POINTS);
     glDrawArrays(GL_POINTS, NUM_TEST_POINTS, (GLsizei)(_cols*_rows));
@@ -280,6 +285,7 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
     _modelViewUniform = glGetUniformLocation(_program, "modelViewMatrix");
     _projectionUniform = glGetUniformLocation(_program, "projectionMatrix");
     _inverseScaleUniform = glGetUniformLocation(_program, "inverseScale");
+    _pointSizeUniform = glGetUniformLocation(_program, "pointSize");
     
     // Release vertex and fragment shaders.
     if (vertShader) {
