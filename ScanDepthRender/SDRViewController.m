@@ -216,7 +216,8 @@
     [_renderer updateWithBounds:self.view.bounds
                      projection:_animation->currentProjRt()
                       modelView:_animation->currentModelView()
-                       invScale:1.0f / _animation->currentScale()];
+                       invScale:1.0f / _animation->currentScale()
+                      pointSize:_animation->currentScale()*12.5f];
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect

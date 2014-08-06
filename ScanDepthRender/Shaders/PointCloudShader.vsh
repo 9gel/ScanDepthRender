@@ -14,11 +14,12 @@ varying lowp vec4 colorVarying;
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 uniform float inverseScale;
+uniform float pointSize;
 
 void main()
 {
     colorVarying = color;
     
     gl_Position = projectionMatrix * modelViewMatrix * position;
-    gl_PointSize = 5.0;
+    gl_PointSize = pointSize;
 }
