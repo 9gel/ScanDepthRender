@@ -394,6 +394,9 @@ struct Options {
 {
     self.statusLabel.hidden = NO;
     self.statusLabel.text = @"Structure Sensor disconnected!";
+    
+    // Stop the color camera when there isn't a connected Structure Sensor
+    [self stopColorCamera];
 }
 
 - (void)sensorDidConnect
@@ -419,6 +422,9 @@ struct Options {
 {
     self.statusLabel.hidden = NO;
     self.statusLabel.text = @"Structure Sensor stopped streaming";
+    
+    // Stop the color camera when there isn't a connected Structure Sensor
+    [self stopColorCamera];
 }
 
 - (void)sensorDidOutputDepthFrame:(STDepthFrame*)depthFrame
@@ -564,120 +570,8 @@ struct Options {
     
 }
 
-- (void)selectCaptureFormat:(NSDictionary*)demandFormat {
-    AVCaptureDeviceFormat * selectedFormat = nil;
-    
-    for (AVCaptureDeviceFormat* format in self.videoDevice.formats)
-    {
-        //double formatMaxFps = ((AVFrameRateRange *)[format.videoSupportedFrameRateRanges objectAtIndex:0]).maxFrameRate;
-        
-        CMFormatDescriptionRef formatDesc = format.formatDescription;
-        FourCharCode fourCharCode = CMFormatDescriptionGetMediaSubType(formatDesc);
-        
-        CMVideoFormatDescriptionRef videoFormatDesc = formatDesc;
-        CMVideoDimensions formatDims = CMVideoFormatDescriptionGetDimensions(videoFormatDesc);
-        
-        NSNumber * widthNeeded  = demandFormat[@"width"];
-        NSNumber * heightNeeded = demandFormat[@"height"];
-        
-        if ( widthNeeded && widthNeeded .intValue!= formatDims.width )
-            continue;
-        
-        if( heightNeeded && heightNeeded.intValue != formatDims.height )
-            continue;
-        
-        // we only support full range YCbCr for now
-        if(fourCharCode != (FourCharCode)'420f')
-            continue;
-        
-        
-        selectedFormat = format;
-        break;
-    }
-    
-    self.videoDevice.activeFormat = selectedFormat;
-}
-
-
-
-#pragma mark - Camera
-
-/*- (void)startAVCaptureSession
+- (void)setupColorCamera
 {
-    NSString* sessionPreset = CAMERA_PRESET;
-    
-    //-- Setup Capture Session.
-    _avsession = [[AVCaptureSession alloc] init];
-    [_avsession beginConfiguration];
-    
-    //-- Set preset session size.
-    [_avsession setSessionPreset:sessionPreset];
-    
-    //-- Creata a video device and input from that Device.  Add the input to the capture session.
-    AVCaptureDevice * videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-    if(videoDevice == nil)
-        assert(0);
-    
-    NSError *error;
-    [videoDevice lockForConfiguration:&error];
-    
-    // Auto-focus Auto-exposure, auto-white balance
-    if ([[[UIDevice currentDevice] systemVersion] compare:@"7.0" options:NSNumericSearch] != NSOrderedAscending)
-        [videoDevice setAutoFocusRangeRestriction:AVCaptureAutoFocusRangeRestrictionFar];
-    [videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
-    
-    [videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
-    [videoDevice setWhiteBalanceMode:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance];
-    
-    [videoDevice unlockForConfiguration];
-    
-    //-- Add the device to the session.
-    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
-    if(error)
-        assert(0);
-    
-    [_avsession addInput:input]; // After this point, captureSession captureOptions are filled.
-    
-    //-- Create the output for the capture session.
-    AVCaptureVideoDataOutput * dataOutput = [[AVCaptureVideoDataOutput alloc] init];
-    
-    [dataOutput setAlwaysDiscardsLateVideoFrames:YES];
-    
-    //-- Set to YUV420.
-    [dataOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
-                                                             forKey:(id)kCVPixelBufferPixelFormatTypeKey]];
-    
-    // Set dispatch to be on the main thread so OpenGL can do things with the data
-    [dataOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
-    
-    [_avsession addOutput:dataOutput];
-    
-    if ([[[UIDevice currentDevice] systemVersion] compare:@"7.0" options:NSNumericSearch] != NSOrderedAscending)
-    {
-        [videoDevice lockForConfiguration:&error];
-        [videoDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, 30)];
-        [videoDevice setActiveVideoMinFrameDuration:CMTimeMake(1, 30)];
-        [videoDevice unlockForConfiguration];
-    }
-    else
-    {
-        AVCaptureConnection *conn = [dataOutput connectionWithMediaType:AVMediaTypeVideo];
-        
-        // Deprecated use is OK here because we're using the correct APIs on iOS 7 above when available
-        // If we're running before iOS 7, we still really want 30 fps!
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        conn.videoMinFrameDuration = CMTimeMake(1, 30);
-        conn.videoMaxFrameDuration = CMTimeMake(1, 30);
-#pragma clang diagnostic pop
-        
-    }
-    [_avsession commitConfiguration];
-    
-    [_avsession startRunning];
-}*/
-
-- (void)setupColorCamera {
     // If already setup, skip it
     if (_avsession)
         return;
@@ -692,18 +586,14 @@ struct Options {
     }
     
     // Use VGA color.
-    //NSString *sessionPreset = AVCaptureSessionPreset640x480;  //qui cambio risoluzione ??
+    NSString *sessionPreset = AVCaptureSessionPreset640x480;
     
     // Set up Capture Session.
     _avsession = [[AVCaptureSession alloc] init];
     [_avsession beginConfiguration];
     
     // Set preset session size.
-    //[_avCaptureSession setSessionPreset:sessionPreset];
-    
-    
-    // InputPriority allows us to select a more precise format (below)
-    [self->_avsession setSessionPreset:AVCaptureSessionPresetInputPriority];
+    [_avsession setSessionPreset:sessionPreset];
     
     // Create a video device and input from that Device.  Add the input to the capture session.
     _videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
@@ -713,27 +603,9 @@ struct Options {
     // Configure Focus, Exposure, and White Balance
     NSError *error;
     
-    
-    // iOS8 supports manual focus at near-infinity, but iOS7 doesn't.
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    bool avCaptureSupportsFocusNearInfinity = [_videoDevice respondsToSelector:@selector(setFocusModeLockedWithLensPosition:completionHandler:)];
-#else
-    bool avCaptureSupportsFocusNearInfinity = false;
-#endif
-    
-    
     // Use auto-exposure, and auto-white balance and set the focus to infinity.
     if([_videoDevice lockForConfiguration:&error])
     {
-        
-        // High-resolution uses 2592x1936, which is close to a 4:3 aspect ratio.
-        // Other aspect ratios such as 720p or 1080p are not yet supported.
-         int imageWidth = 640;
-         int imageHeight = 480;
-        
-        [self selectCaptureFormat:@{ @"width": @(imageWidth),
-                                     @"height": @(imageHeight)}];
-        
         // Allow exposure to change
         if ([_videoDevice isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure])
             [_videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
@@ -742,25 +614,9 @@ struct Options {
         if ([_videoDevice isWhiteBalanceModeSupported:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance])
             [_videoDevice setWhiteBalanceMode:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance];
         
-        if (avCaptureSupportsFocusNearInfinity)
-        {
-            // Set focus at the maximum position allowable (e.g. "near-infinity") to get the
-            // best color/depth alignment.
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-            [_videoDevice setFocusModeLockedWithLensPosition:1.0f completionHandler:nil];
-#endif
-        }
-        else
-        {
-            
-            // Allow the focus to vary, but restrict the focus to far away subject matter
-            if ([_videoDevice isAutoFocusRangeRestrictionSupported])
-                [_videoDevice setAutoFocusRangeRestriction:AVCaptureAutoFocusRangeRestrictionFar];
-            
-            if ([_videoDevice isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus])
-                [_videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
-            
-        }
+        // Set focus at the maximum position allowable (e.g. "near-infinity") to get the
+        // best color/depth alignment.
+        [_videoDevice setFocusModeLockedWithLensPosition:1.0f completionHandler:nil];
         
         [_videoDevice unlockForConfiguration];
     }
@@ -791,26 +647,14 @@ struct Options {
     
     [_avsession addOutput:dataOutput];
     
-    // Force the framerate to 30 FPS, to be in sync with Structure Sensor.
-    if ([_videoDevice respondsToSelector:@selector(setActiveVideoMaxFrameDuration:)]
-        && [_videoDevice respondsToSelector:@selector(setActiveVideoMinFrameDuration:)])
+    if([_videoDevice lockForConfiguration:&error])
     {
-        // Available since iOS 7.
-        if([_videoDevice lockForConfiguration:&error])
-        {
-            [_videoDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, 30)];
-            [_videoDevice setActiveVideoMinFrameDuration:CMTimeMake(1, 30)];
-            [_videoDevice unlockForConfiguration];
-        }
-    }
-    else
-    {
-        NSLog(@"iOS 8 or higher is required. Camera not properly configured.");
-        return;
+        [_videoDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, 30)];
+        [_videoDevice setActiveVideoMinFrameDuration:CMTimeMake(1, 30)];
+        [_videoDevice unlockForConfiguration];
     }
     
     [_avsession commitConfiguration];
-    
 }
 
 
@@ -824,6 +668,18 @@ struct Options {
     
     // Start streaming color images.
     [_avsession startRunning];
+}
+
+- (void)stopColorCamera
+{
+    if ([_avsession isRunning])
+    {
+        // Stop the session
+        [_avsession stopRunning];
+    }
+    
+    _avsession = nil;
+    _videoDevice = nil;
 }
 
 - (void) captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
