@@ -161,7 +161,7 @@ GLfloat gCubeVertexData[216] =
 
 - (void)updateWithBounds:(CGRect)bounds timeSinceLastUpdate:(NSTimeInterval)timeSinceLastUpdate
 {
-    float aspect = fabsf(bounds.size.width / bounds.size.height);
+    float aspect = std::abs(bounds.size.width / bounds.size.height);
     GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(65.0f), aspect, 0.1f, 100.0f);
     
     self.effect.transform.projectionMatrix = projectionMatrix;

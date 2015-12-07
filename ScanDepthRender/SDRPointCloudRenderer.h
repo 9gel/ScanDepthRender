@@ -7,6 +7,8 @@
 //
 
 #import <GLKit/GLKit.h>
+#include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
 #import <Structure/StructureSLAM.h>
 
 @interface SDRPointCloudRenderer : NSObject
@@ -22,6 +24,6 @@
                modelView:(GLKMatrix4)modelView
                 invScale:(float)invScale;
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect;
-- (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)image;
+- (void)updatePointsWithDepth:(STDepthFrame*)depthFrame image:(CGImageRef)image;
 
 @end

@@ -181,7 +181,7 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
     glDrawArrays(GL_POINTS, NUM_TEST_POINTS, (GLsizei)(_cols*_rows));
 }
 
-- (void)updatePointsWithDepth:(STFloatDepthFrame*)depthFrame image:(CGImageRef)imageRef;
+- (void)updatePointsWithDepth:(STDepthFrame*)depthFrame image:(CGImageRef)imageRef;
 {
     if (imageRef)
     {
@@ -203,7 +203,7 @@ GLubyte gTestPointColors[NUM_TEST_POINTS * 4] =
     if (depthFrame)
     {
         float *data = (GLfloat *)_pointsData.mutableBytes;
-        const float *depths = [depthFrame depthAsMillimeters];
+        const float *depths = [depthFrame depthInMillimeters];
         
         for (int r = 0; r < _rows; r++)
         {

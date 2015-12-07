@@ -15,5 +15,5 @@
 @property (weak,nonatomic) IBOutlet UILabel* statusLabel;
 @property (weak,nonatomic) IBOutlet UIImageView* depthImageView;
 @property (weak,nonatomic) IBOutlet UIImageView* cameraImageView;
-
+@property (nonatomic, retain) AVCaptureDevice *videoDevice;
 @end
