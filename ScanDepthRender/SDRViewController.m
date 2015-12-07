@@ -36,15 +36,84 @@
 #define CAMERA_PRESET AVCaptureSessionPreset352x288
 #endif
 
+struct AppStatus {
+    NSString* const pleaseConnectSensorMessage = @"Please connect Structure Sensor.";
+    NSString* const pleaseChargeSensorMessage = @"Please charge Structure Sensor.";
+    NSString* const needColorCameraAccessMessage = @"This app requires camera access to capture color.\nAllow access by going to Settings → Privacy → Camera.";
+    
+    enum SensorStatus
+    {
+        SensorStatusOk,
+        SensorStatusNeedsUserToConnect,
+        SensorStatusNeedsUserToCharge,
+    };
+    
+    // Structure Sensor status.
+    SensorStatus sensorStatus = SensorStatusOk;
+    
+    // Whether iOS camera access was granted by the user.
+    bool colorCameraIsAuthorized = true;
+    
+    // Whether there is currently a message to show.
+    bool needsDisplayOfStatusMessage = false;
+    
+    // Flag to disable entirely status message display.
+    bool statusMessageDisabled = false;
+};
+
+struct Options {
+    // The initial scanning volume size will be 0.5 x 0.5 x 0.5 meters
+    // (X is left-right, Y is up-down, Z is forward-back)
+    GLKVector3 initialVolumeSizeInMeters = GLKVector3Make (0.5f, 0.5f, 0.5f);
+    
+    // Volume resolution in meters
+    float initialVolumeResolutionInMeters = 0.004; // 4 mm per voxel
+    
+    // The maximum number of keyframes saved in keyFrameManager
+    int maxNumKeyFrames = 48;
+    
+    // Colorizer quality
+    STColorizerQuality colorizerQuality = STColorizerHighQuality;
+    
+    // Take a new keyframe in the rotation difference is higher than 20 degrees.
+    float maxKeyFrameRotation = 20.0f * (M_PI / 180.f); // 20 degrees
+    
+    // Take a new keyframe if the translation difference is higher than 30 cm.
+    float maxKeyFrameTranslation = 0.3; // 30cm
+    
+    // Threshold to consider that the rotation motion was small enough for a frame to be accepted
+    // as a keyframe. This avoids capturing keyframes with strong motion blur / rolling shutter.
+    float maxKeyframeRotationSpeedInDegreesPerSecond = 1.f;
+    
+    // Whether we should use depth aligned to the color viewpoint when Structure Sensor was calibrated.
+    // This setting may get overwritten to false if no color camera can be used.
+    bool useHardwareRegisteredDepth = true;
+    
+    // Whether the colorizer should try harder to preserve appearance of the first keyframe.
+    // Recommended for face scans.
+    bool prioritizeFirstFrameColor = true;
+    
+    // Target number of faces of the final textured mesh.
+    int colorizerTargetNumFaces = 50000;
+    
+    // Focus position for the color camera (between 0 and 1). Must remain fixed one depth streaming
+    // has started when using hardware registered depth.
+    const float lensPosition = 0.75f;
+};
+
 @interface SDRViewController () {
     RENDERER_CLASS *_renderer;
     AnimationControl *_animation;
     
     STSensorController *_sensorController;
-    STFloatDepthFrame *_depthFrame;
+    STDepthFrame *_depthFrame;
     STDepthToRgba *_depthToRgba;
     
     AVCaptureSession *_avsession;
+    AVCaptureDevice *_videoDevice;
+    
+    AppStatus _appStatus;
+    Options _options;
 }
 @property (strong, nonatomic) EAGLContext *context;
 @end
@@ -74,16 +143,16 @@
     // Structure setup
     _sensorController = [STSensorController sharedController];
     _sensorController.delegate = self;
-    [_sensorController setFrameSyncConfig:FRAME_SYNC_CONFIG];
+    //[_sensorController setFrameSyncConfig:FRAME_SYNC_CONFIG];
 
-    _depthFrame = [[STFloatDepthFrame alloc] init];
+    _depthFrame = [[STDepthFrame alloc] init];
     
         // When the app enters the foreground, we can choose to restart the stream
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
 
     // Color camera
 #if !TARGET_IPHONE_SIMULATOR
-    [self startAVCaptureSession];
+    [self setupColorCamera];
 #endif
 }
 
@@ -95,7 +164,7 @@
         fromLaunch = false;
     }
     
-    float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
+    float aspect = std::abs(self.view.bounds.size.width / self.view.bounds.size.height);
     GLKMatrix4 projectionMatrix = GLKMatrix4MakePerspective(GLKMathDegreesToRadians(42.87436f), aspect, 0.1f, 100.0f);
     _animation->setInitProjectionRt(projectionMatrix);
     _animation->setMeshCenter(GLKVector3Make(0.0f, 0.0f, -0.6666f));
@@ -154,16 +223,35 @@
     
     if (didSucceed)
     {
-        STSensorInfo *sensorInfo = [_sensorController getSensorInfo:STREAM_CONFIG];
-        if (!sensorInfo) {
-            self.statusLabel.text = @"Error getting Structure Sensor Info.";
+        
+        // There's no status about the sensor that we need to display anymore
+        _appStatus.sensorStatus = AppStatus::SensorStatusOk;
+        [self updateAppStatusMessage];
+        
+        // Start the color camera, setup if needed
+        [self startColorCamera];
+        
+        // Set sensor stream quality
+        STStreamConfig streamConfig   = _options.useHardwareRegisteredDepth ? STStreamConfigRegisteredDepth640x480 : STStreamConfigDepth640x480;
+        
+        
+        // Request that we receive depth frames with synchronized color pairs
+        // After this call, we will start to receive frames through the delegate methods
+        NSError* error = nil;
+        BOOL optionsAreValid = [_sensorController startStreamingWithOptions:@{kSTStreamConfigKey : @(streamConfig),
+                                                                              kSTFrameSyncConfigKey : @(STFrameSyncDepthAndRgb),
+                                                                              kSTColorCameraFixedLensPositionKey: @(_options.lensPosition),
+                                                                              }
+                                                                      error:&error];
+
+        _depthToRgba = [[STDepthToRgba alloc] init];
+
+        if (!optionsAreValid)
+        {
+            NSLog(@"Error during streaming start: %s", [[error localizedDescription] UTF8String]);
+            self.statusLabel.text = @"Error during streaming start.";
             return false;
         }
-
-        _depthToRgba = [[STDepthToRgba alloc] initWithSensorInfo:sensorInfo];
-        
-        // After this call, we will start to receive frames through the delegate methods
-        [_sensorController startStreamingWithConfig:STREAM_CONFIG];
 
         // Now that we've started streaming, hide the status label
         self.statusLabel.hidden = YES;
@@ -184,6 +272,82 @@
     
     return didSucceed;
 }
+
+////////////////////////////////////////////////////
+
+- (void)showAppStatusMessage:(NSString *)msg {
+    _appStatus.needsDisplayOfStatusMessage = true;
+    [self.view.layer removeAllAnimations];
+    
+    [_statusLabel setText:msg];
+    [_statusLabel setHidden:NO];
+    
+    // Progressively show the message label.
+    [self.view setUserInteractionEnabled:false];
+    [UIView animateWithDuration:0.5f animations:^{
+        _statusLabel.alpha = 1.0f;
+    }completion:nil];
+}
+
+- (void)hideAppStatusMessage {
+    
+    _appStatus.needsDisplayOfStatusMessage = false;
+    [self.view.layer removeAllAnimations];
+    
+    [UIView animateWithDuration:0.5f
+                     animations:^{
+                         _statusLabel.alpha = 0.0f;
+                     }
+                     completion:^(BOOL finished) {
+                         // If nobody called showAppStatusMessage before the end of the animation, do not hide it.
+                         if (!_appStatus.needsDisplayOfStatusMessage)
+                         {
+                             [_statusLabel setHidden:YES];
+                             [self.view setUserInteractionEnabled:true];
+                         }
+                     }];
+}
+
+- (void)updateAppStatusMessage {
+    // Skip everything if we should not show app status messages (e.g. in viewing state).
+    if (_appStatus.statusMessageDisabled)
+    {
+        [self hideAppStatusMessage];
+        return;
+    }
+    
+    // First show sensor issues, if any.
+    switch (_appStatus.sensorStatus)
+    {
+        case AppStatus::SensorStatusOk:
+        {
+            break;
+        }
+            
+        case AppStatus::SensorStatusNeedsUserToConnect:
+        {
+            [self showAppStatusMessage:_appStatus.pleaseConnectSensorMessage];
+            return;
+        }
+            
+        case AppStatus::SensorStatusNeedsUserToCharge:
+        {
+            [self showAppStatusMessage:_appStatus.pleaseChargeSensorMessage];
+            return;
+        }
+    }
+    
+    // Then show color camera permission issues, if any.
+    if (!_appStatus.colorCameraIsAuthorized)
+    {
+        [self showAppStatusMessage:_appStatus.needColorCameraAccessMessage];
+        return;
+    }
+    
+    // If we reach this point, no status to show.
+    [self hideAppStatusMessage];
+}
+
 
 - (void) setupGestureRecognizer
 {
@@ -268,10 +432,10 @@
 // Tell the SDK we want framesync: [_ocSensorController setFrameSyncConfig:FRAME_SYNC_DEPTH_AND_RGB];
 // Give the SDK color frames as they come in:     [_ocSensorController frameSyncNewColorImage:sampleBuffer];
 - (void)sensorDidOutputSynchronizedDepthFrame:(STDepthFrame*)depthFrame
-                                 andColorFrame:(CMSampleBufferRef)sampleBuffer
+                                 andColorFrame:(STColorFrame *)colorFrame
 {
     [self renderDepthFrame:depthFrame];
-    [self renderColorFrame:sampleBuffer];
+    [self renderColorFrame:colorFrame.sampleBuffer];
     [_renderer updatePointsWithDepth:_depthFrame image:_cameraImageView.image.CGImage];
 }
 
@@ -279,8 +443,8 @@
 
 - (void)renderDepthFrame:(STDepthFrame*)depthFrame
 {
-    [_depthFrame updateFromDepthFrame:depthFrame];
-    uint8_t *rgbaData = [_depthToRgba convertDepthToRgba:_depthFrame];
+    _depthFrame=depthFrame;
+    uint8_t *rgbaData = [_depthToRgba convertDepthFrameToRgba:_depthFrame];
     
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     
@@ -289,14 +453,14 @@
     bitmapInfo |= kCGBitmapByteOrder16Big;
     
     
-    NSData *data = [NSData dataWithBytes:rgbaData length:depthFrame->width * depthFrame->height * sizeof(uint32_t)];
+    NSData *data = [NSData dataWithBytes:rgbaData length:depthFrame.width * depthFrame.height * sizeof(uint32_t)];
     CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
     
-    CGImageRef cgImage = CGImageCreate(depthFrame->width,
-                                       depthFrame->height,
+    CGImageRef cgImage = CGImageCreate(depthFrame.width,
+                                       depthFrame.height,
                                        8,
                                        32,
-                                       depthFrame->width * sizeof(uint32_t),
+                                       depthFrame.width * sizeof(uint32_t),
                                        colorSpace,
                                        bitmapInfo,
                                        provider,
@@ -355,9 +519,90 @@
     CGColorSpaceRelease(colorSpace);
 }
 
+#pragma mark -  AVFoundation
+
+- (BOOL)queryCameraAuthorizationStatusAndNotifyUserIfNotGranted {
+    // This API was introduced in iOS 7, but in iOS 8 it's actually enforced.
+    if ([AVCaptureDevice respondsToSelector:@selector(authorizationStatusForMediaType:)])
+    {
+        AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        
+        if (authStatus != AVAuthorizationStatusAuthorized)
+        {
+            NSLog(@"Not authorized to use the camera!");
+            
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo
+                                     completionHandler:^(BOOL granted)
+             {
+                 // This block fires on a separate thread, so we need to ensure any actions here
+                 // are sent to the right place.
+                 
+                 // If the request is granted, let's try again to start an AVFoundation session. Otherwise, alert
+                 // the user that things won't go well.
+                 if (granted)
+                 {
+                     
+                     dispatch_async(dispatch_get_main_queue(), ^(void) {
+                         
+                         [self startColorCamera];
+                         
+                         _appStatus.colorCameraIsAuthorized = true;
+                         [self updateAppStatusMessage];
+                         
+                     });
+                     
+                 }
+                 
+             }];
+            
+            return false;
+        }
+        
+    }
+    
+    return true;
+    
+}
+
+- (void)selectCaptureFormat:(NSDictionary*)demandFormat {
+    AVCaptureDeviceFormat * selectedFormat = nil;
+    
+    for (AVCaptureDeviceFormat* format in self.videoDevice.formats)
+    {
+        //double formatMaxFps = ((AVFrameRateRange *)[format.videoSupportedFrameRateRanges objectAtIndex:0]).maxFrameRate;
+        
+        CMFormatDescriptionRef formatDesc = format.formatDescription;
+        FourCharCode fourCharCode = CMFormatDescriptionGetMediaSubType(formatDesc);
+        
+        CMVideoFormatDescriptionRef videoFormatDesc = formatDesc;
+        CMVideoDimensions formatDims = CMVideoFormatDescriptionGetDimensions(videoFormatDesc);
+        
+        NSNumber * widthNeeded  = demandFormat[@"width"];
+        NSNumber * heightNeeded = demandFormat[@"height"];
+        
+        if ( widthNeeded && widthNeeded .intValue!= formatDims.width )
+            continue;
+        
+        if( heightNeeded && heightNeeded.intValue != formatDims.height )
+            continue;
+        
+        // we only support full range YCbCr for now
+        if(fourCharCode != (FourCharCode)'420f')
+            continue;
+        
+        
+        selectedFormat = format;
+        break;
+    }
+    
+    self.videoDevice.activeFormat = selectedFormat;
+}
+
+
+
 #pragma mark - Camera
 
-- (void)startAVCaptureSession
+/*- (void)startAVCaptureSession
 {
     NSString* sessionPreset = CAMERA_PRESET;
     
@@ -430,14 +675,162 @@
     [_avsession commitConfiguration];
     
     [_avsession startRunning];
+}*/
+
+- (void)setupColorCamera {
+    // If already setup, skip it
+    if (_avsession)
+        return;
+    
+    bool cameraAccessAuthorized = [self queryCameraAuthorizationStatusAndNotifyUserIfNotGranted];
+    
+    if (!cameraAccessAuthorized)
+    {
+        _appStatus.colorCameraIsAuthorized = false;
+        [self updateAppStatusMessage];
+        return;
+    }
+    
+    // Use VGA color.
+    //NSString *sessionPreset = AVCaptureSessionPreset640x480;  //qui cambio risoluzione ??
+    
+    // Set up Capture Session.
+    _avsession = [[AVCaptureSession alloc] init];
+    [_avsession beginConfiguration];
+    
+    // Set preset session size.
+    //[_avCaptureSession setSessionPreset:sessionPreset];
+    
+    
+    // InputPriority allows us to select a more precise format (below)
+    [self->_avsession setSessionPreset:AVCaptureSessionPresetInputPriority];
+    
+    // Create a video device and input from that Device.  Add the input to the capture session.
+    _videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    if (_videoDevice == nil)
+        assert(0);
+    
+    // Configure Focus, Exposure, and White Balance
+    NSError *error;
+    
+    
+    // iOS8 supports manual focus at near-infinity, but iOS7 doesn't.
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+    bool avCaptureSupportsFocusNearInfinity = [_videoDevice respondsToSelector:@selector(setFocusModeLockedWithLensPosition:completionHandler:)];
+#else
+    bool avCaptureSupportsFocusNearInfinity = false;
+#endif
+    
+    
+    // Use auto-exposure, and auto-white balance and set the focus to infinity.
+    if([_videoDevice lockForConfiguration:&error])
+    {
+        
+        // High-resolution uses 2592x1936, which is close to a 4:3 aspect ratio.
+        // Other aspect ratios such as 720p or 1080p are not yet supported.
+         int imageWidth = 640;
+         int imageHeight = 480;
+        
+        [self selectCaptureFormat:@{ @"width": @(imageWidth),
+                                     @"height": @(imageHeight)}];
+        
+        // Allow exposure to change
+        if ([_videoDevice isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure])
+            [_videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
+        
+        // Allow white balance to change
+        if ([_videoDevice isWhiteBalanceModeSupported:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance])
+            [_videoDevice setWhiteBalanceMode:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance];
+        
+        if (avCaptureSupportsFocusNearInfinity)
+        {
+            // Set focus at the maximum position allowable (e.g. "near-infinity") to get the
+            // best color/depth alignment.
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+            [_videoDevice setFocusModeLockedWithLensPosition:1.0f completionHandler:nil];
+#endif
+        }
+        else
+        {
+            
+            // Allow the focus to vary, but restrict the focus to far away subject matter
+            if ([_videoDevice isAutoFocusRangeRestrictionSupported])
+                [_videoDevice setAutoFocusRangeRestriction:AVCaptureAutoFocusRangeRestrictionFar];
+            
+            if ([_videoDevice isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus])
+                [_videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+            
+        }
+        
+        [_videoDevice unlockForConfiguration];
+    }
+    
+    //  Add the device to the session.
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:_videoDevice error:&error];
+    if (error)
+    {
+        NSLog(@"Cannot initialize AVCaptureDeviceInput");
+        assert(0);
+    }
+    
+    [_avsession addInput:input]; // After this point, captureSession captureOptions are filled.
+    
+    //  Create the output for the capture session.
+    AVCaptureVideoDataOutput* dataOutput = [[AVCaptureVideoDataOutput alloc] init];
+    
+    // We don't want to process late frames.
+    [dataOutput setAlwaysDiscardsLateVideoFrames:YES];
+    
+    // Use BGRA pixel format.
+    [dataOutput setVideoSettings:[NSDictionary
+                                  dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA]
+                                  forKey:(id)kCVPixelBufferPixelFormatTypeKey]];
+    
+    // Set dispatch to be on the main thread so OpenGL can do things with the data
+    [dataOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
+    
+    [_avsession addOutput:dataOutput];
+    
+    // Force the framerate to 30 FPS, to be in sync with Structure Sensor.
+    if ([_videoDevice respondsToSelector:@selector(setActiveVideoMaxFrameDuration:)]
+        && [_videoDevice respondsToSelector:@selector(setActiveVideoMinFrameDuration:)])
+    {
+        // Available since iOS 7.
+        if([_videoDevice lockForConfiguration:&error])
+        {
+            [_videoDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, 30)];
+            [_videoDevice setActiveVideoMinFrameDuration:CMTimeMake(1, 30)];
+            [_videoDevice unlockForConfiguration];
+        }
+    }
+    else
+    {
+        NSLog(@"iOS 8 or higher is required. Camera not properly configured.");
+        return;
+    }
+    
+    [_avsession commitConfiguration];
+    
 }
 
+
+- (void)startColorCamera {
+    if (_avsession && [_avsession isRunning])
+        return;
+    
+    // Re-setup so focus is lock even when back from background
+    if (_avsession == nil)
+        [self setupColorCamera];
+    
+    // Start streaming color images.
+    [_avsession startRunning];
+}
 
 - (void) captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection
 {
 #ifdef SCAN_DO_SYNC
     // Pass into the driver. The sampleBuffer will return later with a synchronized depth pair.
-    [_sensorController frameSyncNewColorImage:sampleBuffer];
+    [_sensorController frameSyncNewColorBuffer:sampleBuffer];
 #else
     [self renderColorFrame:sampleBuffer];
     [_renderer updatePointsWithDepth:nil image:_cameraImageView.image.CGImage];

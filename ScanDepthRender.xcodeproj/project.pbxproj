@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		6F482D9118CE1C4E00C11D9E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC3418C8FF5000BF0851 /* Main.storyboard */; };
+		8B2EB8821C15B81700715157 /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B2EB8811C15B81700715157 /* Structure.framework */; };
+		8B2EB8841C15CBB100715157 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B2EB8831C15CBB100715157 /* libz.tbd */; };
 		A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC1E18C8FF5000BF0851 /* Foundation.framework */; };
 		A6ABFC2118C8FF5000BF0851 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC2018C8FF5000BF0851 /* CoreGraphics.framework */; };
 		A6ABFC2318C8FF5000BF0851 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6ABFC2218C8FF5000BF0851 /* UIKit.framework */; };
@@ -37,8 +39,6 @@
 		A6ABFC7318CA470200BF0851 /* SDRPointCloudRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */; };
 		A6ABFC7A18CA511200BF0851 /* PointCloudShader.vsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC7418CA4DE600BF0851 /* PointCloudShader.vsh */; };
 		A6ABFC7B18CA511200BF0851 /* PointCloudShader.fsh in Resources */ = {isa = PBXBuildFile; fileRef = A6ABFC7518CA4DE600BF0851 /* PointCloudShader.fsh */; };
-		A6D60CD7196B0954008C0A0F /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6D60CD6196B0954008C0A0F /* Structure.framework */; };
-		A6D60CD8196B0954008C0A0F /* Structure.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6D60CD6196B0954008C0A0F /* Structure.framework */; };
 		A6D60CDA196B0AEE008C0A0F /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6D60CD9196B0AEE008C0A0F /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +53,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8B2EB8811C15B81700715157 /* Structure.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Structure.framework; sourceTree = "<group>"; };
+		8B2EB8831C15CBB100715157 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		A68D07DB18CBBF430050B9D7 /* AnimationControl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnimationControl.h; sourceTree = "<group>"; };
 		A6ABFC1B18C8FF5000BF0851 /* ScanDepthRender.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScanDepthRender.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6ABFC1E18C8FF5000BF0851 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -91,7 +93,6 @@
 		A6ABFC7218CA470200BF0851 /* SDRPointCloudRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDRPointCloudRenderer.m; sourceTree = "<group>"; };
 		A6ABFC7418CA4DE600BF0851 /* PointCloudShader.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = PointCloudShader.vsh; path = Shaders/PointCloudShader.vsh; sourceTree = "<group>"; };
 		A6ABFC7518CA4DE600BF0851 /* PointCloudShader.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = PointCloudShader.fsh; path = Shaders/PointCloudShader.fsh; sourceTree = "<group>"; };
-		A6D60CD6196B0954008C0A0F /* Structure.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Structure.framework; sourceTree = "<group>"; };
 		A6D60CD9196B0AEE008C0A0F /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -100,6 +101,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8B2EB8841C15CBB100715157 /* libz.tbd in Frameworks */,
+				8B2EB8821C15B81700715157 /* Structure.framework in Frameworks */,
 				A6D60CDA196B0AEE008C0A0F /* QuartzCore.framework in Frameworks */,
 				A6ABFC6D18C93F3F00BF0851 /* AVFoundation.framework in Frameworks */,
 				A6ABFC1F18C8FF5000BF0851 /* Foundation.framework in Frameworks */,
@@ -107,7 +110,6 @@
 				A6ABFC2718C8FF5000BF0851 /* OpenGLES.framework in Frameworks */,
 				A6ABFC6818C9027B00BF0851 /* ImageIO.framework in Frameworks */,
 				A6ABFC6618C9024E00BF0851 /* CoreMedia.framework in Frameworks */,
-				A6D60CD7196B0954008C0A0F /* Structure.framework in Frameworks */,
 				A6ABFC6418C9023E00BF0851 /* CoreImage.framework in Frameworks */,
 				A6ABFC6218C9023100BF0851 /* ExternalAccessory.framework in Frameworks */,
 				A6ABFC5F18C9022000BF0851 /* CoreMotion.framework in Frameworks */,
@@ -122,7 +124,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A6D60CD8196B0954008C0A0F /* Structure.framework in Frameworks */,
 				A6ABFC4618C8FF5000BF0851 /* XCTest.framework in Frameworks */,
 				A6ABFC4818C8FF5000BF0851 /* UIKit.framework in Frameworks */,
 				A6ABFC4718C8FF5000BF0851 /* Foundation.framework in Frameworks */,
@@ -154,8 +155,9 @@
 		A6ABFC1D18C8FF5000BF0851 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8B2EB8831C15CBB100715157 /* libz.tbd */,
+				8B2EB8811C15B81700715157 /* Structure.framework */,
 				A6D60CD9196B0AEE008C0A0F /* QuartzCore.framework */,
-				A6D60CD6196B0954008C0A0F /* Structure.framework */,
 				A6ABFC6B18C902AE00BF0851 /* Accelerate.framework */,
 				A6ABFC6918C9029100BF0851 /* AVFoundation.framework */,
 				A6ABFC2018C8FF5000BF0851 /* CoreGraphics.framework */,
@@ -400,6 +402,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -439,6 +442,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
